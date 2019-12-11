@@ -11,14 +11,13 @@
 
 <body>
 
-  <div>
-    <canvas id="canvas" width="600" height="800" onmousedown="handleMouseDown(event)" onmouseup="handleMouseUp(event)"
-      onmousemove="handleMouseMove(event)"></canvas>
+  <div id="content">
+    <canvas id="canvas" width="600" height="800"></canvas>
     <button id="line" onclick="lineClick();">Line</button>
+    <button id="line" onclick="brushClick();">Brush</button>
     <button id="text" onclick="textClick();">Text</button>
     <span id="i-tool">..selected tool</span>
   </div>
-
 
   <script src="main.js"></script>
 </body>
