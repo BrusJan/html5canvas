@@ -1,26 +1,26 @@
 class Point {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
+  constructor(public x: number, public y: number) {
+
   }
 }
-
 class Boundaries {
-  constructor(a, b) {
-    this.a = a;
-    this.b = b;
+  constructor(public a: Point, public b: Point) {
+  }
+}
+class Line {
+  constructor(public bo: Boundaries, public editing: boolean) {
   }
 }
 
 var MAX_BRUSH_POINT_COUNT = 100
 var tool = 0 // 0 = none, 1 = line, 2 = text
-var newLine = { boundaries: new Boundaries(new Point(0, 0), new Point(0, 0)), editing: false }
-var brushStrokes = []
+var newLine = new Line(new Boundaries(new Point(0, 0), new Point(0, 0)), false)
+var brushStrokes = new Array<Point[]>()
 var brushIsDrawing = false
-var brushPoints = []
+var brushPoints = new Array<Point>()
 var brushLastPoint = new Point(0, 0);
 var brushCurrentPoint = new Point(0, 0);
-var lines = []
+var lines = new Array<Line>()
 
 function lineClick() {
   setTool(1)
@@ -33,50 +33,50 @@ function textClick() {
   console.info({ brushPoints })
   console.info({ brushStrokes })
 }
-function setTool(t) {
+function setTool(t: number) {
   tool = t
   let ispan = document.getElementById('i-tool')
-  ispan.innerHTML = t
+  if (ispan) ispan.innerHTML = t.toString()
 }
 
 window.onload = function () {
   setTool(0)
-  const cv = document.querySelector('#canvas');
+  const cv = <HTMLCanvasElement>document.getElementById('canvas')
   const ctx = cv.getContext("2d");
   cv.addEventListener("mousedown", handleMouseDown);
   cv.addEventListener("mouseup", handleMouseUp);
   cv.addEventListener("mousemove", handleMouseMove);
 
-  function handleMouseDown(e) {
+  function handleMouseDown(e: MouseEvent) {
     const rect = cv.getBoundingClientRect()
     switch (tool) {
       case 0: return;
       case 1:
-        newLine = { boundaries: new Boundaries(new Point(parseInt(e.clientX - rect.left), parseInt(e.clientY - rect.top)), new Point(0, 0)), editing: true }
+        newLine = new Line(new Boundaries(new Point(e.clientX - rect.left, e.clientY - rect.top), new Point(0, 0)), true)
         break;
       case 2:
-        brushPoints.push(new Point(parseInt(e.clientX - rect.left), parseInt(e.clientY - rect.top)))
-        brushCurrentPoint = new Point(parseInt(e.clientX - rect.left), parseInt(e.clientY - rect.top))
-        brushLastPoint = new Point(parseInt(e.clientX - rect.left), parseInt(e.clientY - rect.top))
+        brushPoints.push(new Point(e.clientX - rect.left, e.clientY - rect.top))
+        brushCurrentPoint = new Point(e.clientX - rect.left, e.clientY - rect.top)
+        brushLastPoint = new Point(e.clientX - rect.left, e.clientY - rect.top)
         brushIsDrawing = true;
         break;
     }
 
   }
 
-  function handleMouseUp(e) {
+  function handleMouseUp(e: MouseEvent) {
     switch (tool) {
       case 0: return;
       case 1:
         const rect = cv.getBoundingClientRect()
-        newLine.boundaries.b.x = parseInt(e.clientX - rect.left)
-        newLine.boundaries.b.y = parseInt(e.clientY - rect.top)
+        newLine.bo.b.x = e.clientX - rect.left
+        newLine.bo.b.y = e.clientY - rect.top
         newLine.editing = false
         // if line is too short, do not create it
-        if (Math.abs(newLine.boundaries.a.x - newLine.boundaries.b.x) > 3 || Math.abs(newLine.boundaries.a.y - newLine.boundaries.b.y) > 3) {
+        if (Math.abs(newLine.bo.a.x - newLine.bo.b.x) > 3 || Math.abs(newLine.bo.a.y - newLine.bo.b.y) > 3) {
           // object assign to create new object and not use the same refference over and over
           lines.push(newLine)
-          newLine = { boundaries: new Boundaries(new Point(0, 0), new Point(0, 0)), editing: false }
+          newLine = new Line(new Boundaries(new Point(0, 0), new Point(0, 0)), false)
         }
         redrawCanvas()
         break;
@@ -86,23 +86,23 @@ window.onload = function () {
     }
   }
 
-  function handleMouseMove(e) {
+  function handleMouseMove(e: MouseEvent) {
     const rect = cv.getBoundingClientRect()
     switch (tool) {
       case 0: return
       case 1:
-        newLine.boundaries.b.x = parseInt(e.clientX - rect.left)
-        newLine.boundaries.b.y = parseInt(e.clientY - rect.top)
+        newLine.bo.b.x = e.clientX - rect.left
+        newLine.bo.b.y = e.clientY - rect.top
         redrawCanvas()
         break
       case 2:
         if (!brushIsDrawing) break;
-        brushCurrentPoint.x = parseInt(e.clientX - rect.left)
-        brushCurrentPoint.y = parseInt(e.clientY - rect.top)
+        brushCurrentPoint.x = e.clientX - rect.left
+        brushCurrentPoint.y = e.clientY - rect.top
         if (Math.abs(brushCurrentPoint.x - brushLastPoint.x) > 3 || Math.abs(brushCurrentPoint.y - brushLastPoint.y) > 20) {
           brushPoints.push(brushCurrentPoint)
-          brushLastPoint = new Point(parseInt(e.clientX - rect.left), parseInt(e.clientY - rect.top))
-          brushCurrentPoint = new Point(parseInt(e.clientX - rect.left), parseInt(e.clientY - rect.top))
+          brushLastPoint = new Point(e.clientX - rect.left, e.clientY - rect.top)
+          brushCurrentPoint = new Point(e.clientX - rect.left, e.clientY - rect.top)
         }
         if (brushPoints.length >= MAX_BRUSH_POINT_COUNT) finishBrushStroke()
         redrawCanvas()
@@ -111,6 +111,7 @@ window.onload = function () {
   }
 
   function redrawCanvas() {
+    if (!ctx) return;
     ctx.clearRect(0, 0, cv.width, cv.height)
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
@@ -120,13 +121,13 @@ window.onload = function () {
     ctx.strokeStyle = "black"
     ctx.beginPath()
     if (newLine.editing) {
-      ctx.moveTo(newLine.boundaries.a.x, newLine.boundaries.a.y)
-      ctx.lineTo(newLine.boundaries.b.x, newLine.boundaries.b.y)
+      ctx.moveTo(newLine.bo.a.x, newLine.bo.a.y)
+      ctx.lineTo(newLine.bo.b.x, newLine.bo.b.y)
       ctx.stroke();
     }
     for (let i = 0; i < lines.length; i++) {
-      ctx.moveTo(lines[i].boundaries.a.x, lines[i].boundaries.a.y)
-      ctx.lineTo(lines[i].boundaries.b.x, lines[i].boundaries.b.y)
+      ctx.moveTo(lines[i].bo.a.x, lines[i].bo.a.y)
+      ctx.lineTo(lines[i].bo.b.x, lines[i].bo.b.y)
       ctx.stroke()
     }
     ctx.closePath()

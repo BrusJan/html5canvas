@@ -12,14 +12,20 @@
 <body>
 
   <div id="content">
-    <canvas id="canvas" width="600" height="800"></canvas>
-    <button id="line" onclick="lineClick();">Line</button>
-    <button id="line" onclick="brushClick();">Brush</button>
-    <button id="text" onclick="textClick();">Text</button>
-    <span id="i-tool">..selected tool</span>
+    <div class="toolbar">
+      <button id="line" onclick="lineClick();">Line</button>
+      <button id="brush" onclick="brushClick();">Brush</button>
+      <button id="text" onclick="textClick();">Text</button>
+      <span id="i-tool">..selected tool</span>
+    </div>
+    <div class="cv-container">
+      <button class="arrow a-left">&lt;</button>
+      <canvas id="canvas" width="600" height="800"></canvas>
+      <button class="arrow a-right">&gt;</button>
+    </div>
   </div>
 
-  <script src="main.js"></script>
+  <script src="dist/canvas.js"></script>
 </body>
 
 </html>

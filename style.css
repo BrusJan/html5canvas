@@ -26,12 +26,30 @@ button {
 	border-radius: 6px;
 	background: rgb(255, 253, 123);
 	border: none;
-	display: block;
 }
 #canvas {
 	border: none;
 	background: white;
-	float: left;
 	margin: 1em;
 	box-shadow: 2px 2px 7px rgba(0, 0, 0, 0.3);
+	display: block;
+}
+.toolbar {
+	width: fit-content;
+	margin: auto;
+}
+.cv-container {
+	width: fit-content;
+	margin: auto;
+	display: grid;
+	grid-template-columns: max-content min-content max-content;
+}
+.arrow {
+	width: 50px;
+	height: 50px;
+	background: darkgray;
+	color: white;
+	font-size: 1.5em;
+	margin:  2em 0em;
+	box-shadow: 0px 0px 8px rgba(255, 255, 255, 0.5);
 }
