@@ -57,15 +57,14 @@ window.onload = function () {
   this.imgOrig.src = 'img/' + pageNumber.toString() + '.png'
 
   function prevPage() {
-    pageNumber = pageNumber--
+    pageNumber = --pageNumber
     imgOrig.src = 'img/' + pageNumber.toString() + '.png'
     redrawCanvas()
-    
   }
   var prevbtn = document.getElementById('btnPrevPage')
   if (prevbtn) prevbtn.onclick = prevPage
   function nextPage() {
-    pageNumber = pageNumber++
+    pageNumber = ++pageNumber
     imgOrig.src = 'img/' + pageNumber.toString() + '.png'
     redrawCanvas()
   }
@@ -139,7 +138,7 @@ window.onload = function () {
     if (!ctx) return;
     ctx.clearRect(0, 0, cv.width, cv.height)
 
-    ctx.drawImage(imgOrig, 0, 0)
+    ctx.drawImage(imgOrig, 0, 0, cv.width, cv.height)
 
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
