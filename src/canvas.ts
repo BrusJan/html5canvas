@@ -13,14 +13,21 @@ class Line {
 }
 
 var MAX_BRUSH_POINT_COUNT = 100
+var cvWidth = 600
+var cvHeight = 800
 var tool = 0 // 0 = none, 1 = line, 2 = text
 var newLine = new Line(new Boundaries(new Point(0, 0), new Point(0, 0)), false)
-var brushStrokes = new Array<Point[]>()
+var brushStrokes = new Array<Point[]>() // should be saved
 var brushIsDrawing = false
 var brushPoints = new Array<Point>()
-var brushLastPoint = new Point(0, 0);
-var brushCurrentPoint = new Point(0, 0);
-var lines = new Array<Line>()
+var brushLastPoint = new Point(0, 0)
+var brushCurrentPoint = new Point(0, 0)
+var lines = new Array<Line>() // should be saved
+
+var imgOrig = new Image()
+var imgDone = new Image()
+var imgUsr = new Image()
+var pageNumber = 1
 
 function lineClick() {
   setTool(1)
@@ -33,6 +40,7 @@ function textClick() {
   console.info({ brushPoints })
   console.info({ brushStrokes })
 }
+
 function setTool(t: number) {
   tool = t
   let ispan = document.getElementById('i-tool')
@@ -42,10 +50,27 @@ function setTool(t: number) {
 window.onload = function () {
   setTool(0)
   const cv = <HTMLCanvasElement>document.getElementById('canvas')
-  const ctx = cv.getContext("2d");
-  cv.addEventListener("mousedown", handleMouseDown);
-  cv.addEventListener("mouseup", handleMouseUp);
-  cv.addEventListener("mousemove", handleMouseMove);
+  const ctx = cv.getContext("2d")
+  cv.addEventListener("mousedown", handleMouseDown)
+  cv.addEventListener("mouseup", handleMouseUp)
+  cv.addEventListener("mousemove", handleMouseMove)
+  this.imgOrig.src = 'img/' + pageNumber.toString() + '.png'
+
+  function prevPage() {
+    pageNumber = pageNumber--
+    imgOrig.src = 'img/' + pageNumber.toString() + '.png'
+    redrawCanvas()
+    
+  }
+  var prevbtn = document.getElementById('btnPrevPage')
+  if (prevbtn) prevbtn.onclick = prevPage
+  function nextPage() {
+    pageNumber = pageNumber++
+    imgOrig.src = 'img/' + pageNumber.toString() + '.png'
+    redrawCanvas()
+  }
+  var nextbtn = document.getElementById('btnNextPage')
+  if (nextbtn) nextbtn.onclick = nextPage
 
   function handleMouseDown(e: MouseEvent) {
     const rect = cv.getBoundingClientRect()
@@ -113,6 +138,9 @@ window.onload = function () {
   function redrawCanvas() {
     if (!ctx) return;
     ctx.clearRect(0, 0, cv.width, cv.height)
+
+    ctx.drawImage(imgOrig, 0, 0)
+
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
 

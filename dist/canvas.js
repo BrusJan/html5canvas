@@ -21,14 +21,20 @@ var Line = /** @class */ (function () {
     return Line;
 }());
 var MAX_BRUSH_POINT_COUNT = 100;
+var cvWidth = 600;
+var cvHeight = 800;
 var tool = 0; // 0 = none, 1 = line, 2 = text
 var newLine = new Line(new Boundaries(new Point(0, 0), new Point(0, 0)), false);
-var brushStrokes = new Array();
+var brushStrokes = new Array(); // should be saved
 var brushIsDrawing = false;
 var brushPoints = new Array();
 var brushLastPoint = new Point(0, 0);
 var brushCurrentPoint = new Point(0, 0);
-var lines = new Array();
+var lines = new Array(); // should be saved
+var imgOrig = new Image();
+var imgDone = new Image();
+var imgUsr = new Image();
+var pageNumber = 1;
 function lineClick() {
     setTool(1);
 }
@@ -53,6 +59,23 @@ window.onload = function () {
     cv.addEventListener("mousedown", handleMouseDown);
     cv.addEventListener("mouseup", handleMouseUp);
     cv.addEventListener("mousemove", handleMouseMove);
+    this.imgOrig.src = 'img/' + pageNumber.toString() + '.png';
+    function prevPage() {
+        pageNumber = pageNumber--;
+        imgOrig.src = 'img/' + pageNumber.toString() + '.png';
+        redrawCanvas();
+    }
+    var prevbtn = document.getElementById('btnPrevPage');
+    if (prevbtn)
+        prevbtn.onclick = prevPage;
+    function nextPage() {
+        pageNumber = pageNumber++;
+        imgOrig.src = 'img/' + pageNumber.toString() + '.png';
+        redrawCanvas();
+    }
+    var nextbtn = document.getElementById('btnNextPage');
+    if (nextbtn)
+        nextbtn.onclick = nextPage;
     function handleMouseDown(e) {
         var rect = cv.getBoundingClientRect();
         switch (tool) {
@@ -119,6 +142,7 @@ window.onload = function () {
         if (!ctx)
             return;
         ctx.clearRect(0, 0, cv.width, cv.height);
+        ctx.drawImage(imgOrig, 0, 0);
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         // draw lines
