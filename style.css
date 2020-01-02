@@ -34,15 +34,16 @@ button {
 	box-shadow: 2px 2px 7px rgba(0, 0, 0, 0.3);
 	display: block;
 }
+#inputPageNumber {
+	width: 50px;
+	height: 30px;
+}
 .toolbar {
 	width: fit-content;
 	margin: auto;
 }
 .cv-container {
 	width: fit-content;
-	margin: auto;
-	display: grid;
-	grid-template-columns: max-content min-content max-content;
 }
 .arrow {
 	width: 50px;

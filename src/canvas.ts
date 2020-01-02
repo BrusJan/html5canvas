@@ -52,10 +52,23 @@ window.onload = function () {
   setTool(0)
   const cv = <HTMLCanvasElement>document.getElementById('canvas')
   const ctx = cv.getContext("2d")
+  const inputPageNumber = <HTMLInputElement>document.getElementById('inputPageNumber')
   cv.addEventListener("mousedown", handleMouseDown)
   cv.addEventListener("mouseup", handleMouseUp)
   cv.addEventListener("mousemove", handleMouseMove)
   this.imgOrig.src = 'img/' + pageNumber.toString() + '.png'
+
+  inputPageNumber.addEventListener("keyup", function(event) {
+    console.info('input click')
+    // Number 13 is the "Enter" key on the keyboard
+    if (event.keyCode === 13) {
+      // Cancel the default action, if needed
+      console.info('input enter click')
+      event.preventDefault();
+      pageNumber = +inputPageNumber.value
+      redrawCanvas()
+    }
+  }); 
 
   // button prev page click must be async to redraw image after a small delay, otherwise it does not redraw
   async function prevPage() {
@@ -66,6 +79,7 @@ window.onload = function () {
     // sleep for  10ms so the picture redraws
     await new Promise(r => setTimeout(r, 50));
     redrawCanvas()
+    inputPageNumber.value = pageNumber.toString()
   }
   var prevbtn = document.getElementById('btnPrevPage')
   if (prevbtn) prevbtn.onclick = prevPage
@@ -79,6 +93,7 @@ window.onload = function () {
     // sleep for  10ms so the picture redraws
     await new Promise(r => setTimeout(r, 50));
     redrawCanvas()
+    inputPageNumber.value = pageNumber.toString()
   }
   var nextbtn = document.getElementById('btnNextPage')
   if (nextbtn) nextbtn.onclick = nextPage
@@ -97,7 +112,6 @@ window.onload = function () {
         brushIsDrawing = true;
         break;
     }
-
   }
 
   function handleMouseUp(e: MouseEvent) {

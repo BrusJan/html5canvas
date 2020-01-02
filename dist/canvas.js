@@ -96,10 +96,22 @@ window.onload = function () {
     setTool(0);
     var cv = document.getElementById('canvas');
     var ctx = cv.getContext("2d");
+    var inputPageNumber = document.getElementById('inputPageNumber');
     cv.addEventListener("mousedown", handleMouseDown);
     cv.addEventListener("mouseup", handleMouseUp);
     cv.addEventListener("mousemove", handleMouseMove);
     this.imgOrig.src = 'img/' + pageNumber.toString() + '.png';
+    inputPageNumber.addEventListener("keyup", function (event) {
+        console.info('input click');
+        // Number 13 is the "Enter" key on the keyboard
+        if (event.keyCode === 13) {
+            // Cancel the default action, if needed
+            console.info('input enter click');
+            event.preventDefault();
+            pageNumber = +inputPageNumber.value;
+            redrawCanvas();
+        }
+    });
     // button prev page click must be async to redraw image after a small delay, otherwise it does not redraw
     function prevPage() {
         return __awaiter(this, void 0, void 0, function () {
@@ -116,6 +128,7 @@ window.onload = function () {
                         // sleep for  10ms so the picture redraws
                         _a.sent();
                         redrawCanvas();
+                        inputPageNumber.value = pageNumber.toString();
                         return [2 /*return*/];
                 }
             });
@@ -140,6 +153,7 @@ window.onload = function () {
                         // sleep for  10ms so the picture redraws
                         _a.sent();
                         redrawCanvas();
+                        inputPageNumber.value = pageNumber.toString();
                         return [2 /*return*/];
                 }
             });
