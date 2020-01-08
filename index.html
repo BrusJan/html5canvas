@@ -13,15 +13,7 @@
 <body>
 
   <div id="content">
-    <div class="toolbar">
-      <button id="line" onclick="setTool(1)">Line</button>
-      <button id="brush" onclick="setTool(2)">Brush</button>
-      <!-- <button id="text" onclick="setTool(3)">Text</button> -->
-      <button id="text" onclick="zoomCanvas(0.25)">Zoom in</button>
-      <button id="text" onclick="zoomCanvas(-0.25)">Zoom out</button>
-      <span id="i-tool">zoom 1</span>
-    </div>
-    <div class="cv-container">
+    <div class="top-toolbar">
       <button id="btnPrevPage" class="arrow a-left">&lt;</button>
       <input id="inputPageNumber" type="number"></input>
       <button id="btnNextPage" class="arrow a-right">&gt;</button>
@@ -36,11 +28,17 @@
         <input id="solution" value="3" name="version" type="radio" />
         <label id="lblSwitch3" for="solution">ŘEŠENÍ</label>
       </div>
-
-      <div class="canvasDiv">
-        <canvas id="canvas" width="600" height="800" tabindex="1"></canvas>
-      </div>
-
+    </div>
+    <div class="left-toolbar">
+      <button id="line" onclick="setTool(1)">Line</button>
+      <button id="brush" onclick="setTool(2)">Brush</button>
+      <!-- <button id="text" onclick="setTool(3)">Text</button> -->
+      <button id="text" onclick="zoomCanvas(0.25)">Zoom in</button>
+      <button id="text" onclick="zoomCanvas(-0.25)">Zoom out</button>
+      <span id="i-tool">zoom 1</span>
+    </div>
+    <div class="canvasDiv">
+      <canvas id="canvas" width="600" height="800" tabindex="1"></canvas>
     </div>
   </div>
 
