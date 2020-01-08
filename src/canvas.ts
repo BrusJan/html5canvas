@@ -39,6 +39,17 @@ var pageNumber = 1
 
 function setTool(t: number) {
   tool = t
+  switch (t) {
+    case 1: 
+      document.getElementById('line')?.classList.replace('enabled','disabled')
+      document.getElementById('brush')?.classList.replace('disabled','enabled')
+      break;
+    case 2: 
+    document.getElementById('line')?.classList.replace('disabled','enabled')
+    document.getElementById('brush')?.classList.replace('enabled','disabled')
+      break;
+    case 3: break;
+  }
 }
 function zoomCanvas(z: number) {
   zoom += z

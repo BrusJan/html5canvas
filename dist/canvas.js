@@ -50,7 +50,19 @@ var imgDone = new Image();
 var imgUsr = new Image();
 var pageNumber = 1;
 function setTool(t) {
+    var _a, _b, _c, _d;
     tool = t;
+    switch (t) {
+        case 1:
+            (_a = document.getElementById('line')) === null || _a === void 0 ? void 0 : _a.classList.replace('enabled', 'disabled');
+            (_b = document.getElementById('brush')) === null || _b === void 0 ? void 0 : _b.classList.replace('disabled', 'enabled');
+            break;
+        case 2:
+            (_c = document.getElementById('line')) === null || _c === void 0 ? void 0 : _c.classList.replace('disabled', 'enabled');
+            (_d = document.getElementById('brush')) === null || _d === void 0 ? void 0 : _d.classList.replace('enabled', 'disabled');
+            break;
+        case 3: break;
+    }
 }
 function zoomCanvas(z) {
     zoom += z;

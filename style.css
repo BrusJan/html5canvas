@@ -6,6 +6,10 @@
 html,
 body {
 	height: 100%;
+	background: #474747;
+}
+input:focus, button:focus {
+    outline: none;
 }
 #content {
 	width: 100%;
@@ -15,12 +19,14 @@ body {
 }
 
 button {
-	width: 80px;
-	height: 30px;
+	width: 50px;
+    height: 50px;
 	border-radius: 6px;
 	color: #d5d5d5;
 	background: #606060;
 	border: none;
+	font-size: 2em;
+    color: rgb(163,211,199);
 }
 #canvas {
 	border: none;
@@ -29,8 +35,6 @@ button {
 	display: block;
 }
 .canvasDiv {
-	max-width: 800px;
-	max-height: 800px;
 	overflow: auto;
 	margin: 1em;
 }
@@ -39,11 +43,10 @@ button {
 	height: 30px;
 }
 .top-toolbar {
-	padding: 0.3em;
-	padding-left: 8em;
+	padding: 1em 0 0 5em;
 }
-.left-toolbar * {
-	margin: 0.2em;
+.left-toolbar button {
+	margin: 2px;
 }
 .left-toolbar {
 	float: left;
@@ -51,14 +54,15 @@ button {
 	margin: 1em;
 }
 .arrow {
-	width: 40px;
-	height: 40px;
+	width: 50px;
+	height: 50px;
 	background: #606060;
 	color: #d5d5d5;
 	font-size: 1.5em;
+	box-shadow: -1px -1px 2px rgba(0, 0, 0, .25) inset, 1px 1px 1px rgba(255, 255, 255, .25) inset;
 }
 .switch {
-	display: contents;
+	display: inline;
 	color: #d5d5d5;
 	margin: 1em;
 }
@@ -66,18 +70,25 @@ button {
 	display: none;
 }
 .switch label {
-	padding: 7px 10px;
+	padding: 7px 13px;
 	background: rgb(87, 87, 87);
 	margin: -2px;
-
+	font-size: 1.5em;
 	box-shadow: -1px -1px 2px rgba(0, 0, 0, .25) inset, 1px 1px 1px rgba(255, 255, 255, .25) inset;
 }
 .switch input[type="radio"]:checked + label {
-	background: #ff886a;
+	background: rgb(73,137,122);
 }
 #lblSwitch1 {
 	border-radius: 6px 0 0 6px;
 }
 #lblSwitch3 {
 	border-radius: 0 6px 6px 0;
+}
+.enabled {
+	box-shadow: -1px -1px 2px rgba(0, 0, 0, .25) inset, 1px 1px 3px rgba(255, 255, 255, .25) inset;
+}
+.disabled {
+	background: rgba(73,137,122,0.3);
+	box-shadow: 2px 2px 4px rgba(0,0,0, .4) inset;
 }
