@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- run tsc command in terminal and debug in chrome, no need to run live server -->
+<!-- run 'tsc' command in terminal, go live and debug in chrome -->
 
 <head>
   <meta charset="UTF-8">
@@ -14,17 +14,33 @@
 
   <div id="content">
     <div class="toolbar">
-      <button id="line" onclick="lineClick()">Line</button>
-      <button id="brush" onclick="brushClick()">Brush</button>
-      <button id="text" onclick="textClick()">Text</button>
-      <span id="i-tool">..selected tool</span>
+      <button id="line" onclick="setTool(1)">Line</button>
+      <button id="brush" onclick="setTool(2)">Brush</button>
+      <!-- <button id="text" onclick="setTool(3)">Text</button> -->
+      <button id="text" onclick="zoomCanvas(0.25)">Zoom in</button>
+      <button id="text" onclick="zoomCanvas(-0.25)">Zoom out</button>
+      <span id="i-tool">zoom 1</span>
     </div>
     <div class="cv-container">
       <button id="btnPrevPage" class="arrow a-left">&lt;</button>
       <input id="inputPageNumber" type="number"></input>
       <button id="btnNextPage" class="arrow a-right">&gt;</button>
-      <canvas id="canvas" width="600" height="800" tabindex="1"></canvas>
-      
+
+      <div class="switch">
+        <input id="original" value="1" name="version" type="radio" checked="" />
+        <label id="lblSwitch1" for="original">ORIGINÁL</label>
+
+        <input id="edit" value="2" name="version" type="radio" checked="checked" />
+        <label id="lblSwitch2" for="edit">MOJE ÚPRAVY</label>
+
+        <input id="solution" value="3" name="version" type="radio" />
+        <label id="lblSwitch3" for="solution">ŘEŠENÍ</label>
+      </div>
+
+      <div class="canvasDiv">
+        <canvas id="canvas" width="600" height="800" tabindex="1"></canvas>
+      </div>
+
     </div>
   </div>
 
