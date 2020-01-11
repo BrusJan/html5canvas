@@ -18,6 +18,10 @@ class BrushStroke {
   constructor(public points: Array<Point>) {
   }
 }
+class TypedText {
+  constructor(public text: string, public anchor: Point, public editing: boolean) {
+  }
+}
 
 var MAX_BRUSH_POINT_COUNT = 100
 var cvWidth = 600
@@ -28,6 +32,11 @@ var zoom = 1
 var drawnObjects = new Array<DrawnObject>()
 var newLine = new Line(new Boundaries(new Point(0, 0), new Point(0, 0)), false)
 var brushIsDrawing = false
+var textTyping = false
+var carretVisible = false // if the text carret should be blinking
+var carretOn = false // if the text carret is currently visible, should switch back and forth periodically
+var carretCharPosition = 0 // 0 = beginning, 1 = after first char, 5 = after 5th char
+var newText = new TypedText('', new Point(0, 0), false)
 var brushPoints = new Array<Point>()
 var brushLastPoint = new Point(0, 0)
 var brushCurrentPoint = new Point(0, 0)
@@ -40,15 +49,21 @@ var pageNumber = 1
 function setTool(t: number) {
   tool = t
   switch (t) {
-    case 1: 
-      document.getElementById('line')?.classList.replace('enabled','disabled')
-      document.getElementById('brush')?.classList.replace('disabled','enabled')
-      break;
-    case 2: 
-    document.getElementById('line')?.classList.replace('disabled','enabled')
-    document.getElementById('brush')?.classList.replace('enabled','disabled')
-      break;
-    case 3: break;
+    case 1:
+      document.getElementById('line')?.classList.replace('enabled', 'disabled')
+      document.getElementById('brush')?.classList.replace('disabled', 'enabled')
+      document.getElementById('text')?.classList.replace('disabled', 'enabled')
+      break
+    case 2:
+      document.getElementById('line')?.classList.replace('disabled', 'enabled')
+      document.getElementById('brush')?.classList.replace('enabled', 'disabled')
+      document.getElementById('text')?.classList.replace('disabled', 'enabled')
+      break
+    case 3:
+      document.getElementById('line')?.classList.replace('disabled', 'enabled')
+      document.getElementById('brush')?.classList.replace('disabled', 'enabled')
+      document.getElementById('text')?.classList.replace('enabled', 'disabled')
+      break
   }
 }
 function zoomCanvas(z: number) {
@@ -72,6 +87,13 @@ window.onload = function () {
   cv.addEventListener("mousedown", handleMouseDown)
   cv.addEventListener("mouseup", handleMouseUp)
   cv.addEventListener("mousemove", handleMouseMove)
+  cv.addEventListener("keyup", handleKeyUp)
+
+  this.setInterval(() => {
+    if (this.carretVisible) {
+      this.carretOn = !this.carretOn
+    }
+  }, 500)
 
   // first call, calls request animation frame inside co it cycles inside after this one call
   redrawCanvas()
@@ -86,7 +108,7 @@ window.onload = function () {
     if (event.keyCode === 13) {
       // Cancel the default action, if needed
       console.info('input enter click')
-      event.preventDefault();
+      event.preventDefault()
       pageNumber = +inputPageNumber.value
     }
   })
@@ -125,31 +147,71 @@ window.onload = function () {
   var nextbtn = document.getElementById('btnNextPage')
   if (nextbtn) nextbtn.onclick = nextPage
 
+  function handleKeyUp(e: KeyboardEvent) {
+    console.info('key ' + e.keyCode)
+    if (e.keyCode > 48) {
+      newText.text += e.key
+      carretCharPosition += 1
+    } else {
+      switch (e.keyCode) {
+        case 13: // enter
+          finishText()
+          break
+        case 35: // end
+          carretCharPosition = newText.text.length
+          break
+        case 36: // home
+          carretCharPosition = 0
+          break
+        case 8: //backspace
+          newText.text = newText.text.slice(0, carretCharPosition - 1) + newText.text.slice(carretCharPosition);
+          carretCharPosition -= 1
+          break
+        case 46: //delete
+          if (carretCharPosition < newText.text.length)
+            newText.text = newText.text.slice(0, carretCharPosition) + newText.text.slice(carretCharPosition + 1);
+          break
+        case 37: // left arrow
+          if (carretCharPosition > 0) carretCharPosition -= 1
+          break
+        case 39: // right arrow
+          if (carretCharPosition < newText.text.length) carretCharPosition += 1
+          break
+        case 16: break //shift
+        default:
+          break
+      }
+    }
+    console.info('newtext text' + newText.text)
+  }
   function handleMouseDown(e: MouseEvent) {
     // do stuff only when version 2 is active (moje upravy)
     if (version != 2) return
     const rect = cv.getBoundingClientRect()
     switch (tool) {
-      case 0: return;
+      case 0: return
       case 1:
         newLine = new Line(new Boundaries(new Point(e.clientX - rect.left, e.clientY - rect.top), new Point(e.clientX - rect.left, e.clientY - rect.top)), true)
-        break;
+        break
       case 2:
         brushPoints.push(new Point(e.clientX - rect.left, e.clientY - rect.top))
         brushCurrentPoint = new Point(e.clientX - rect.left, e.clientY - rect.top)
         brushLastPoint = new Point(e.clientX - rect.left, e.clientY - rect.top)
-        brushIsDrawing = true;
-        break;
+        brushIsDrawing = true
+        break
+      case 3:
+        textTyping = true
+        break
     }
   }
 
   function handleMouseUp(e: MouseEvent) {
     // do stuff only when version 2 is active (moje upravy)
     if (version != 2) return
+    const rect = cv.getBoundingClientRect()
     switch (tool) {
-      case 0: return;
-      case 1:
-        const rect = cv.getBoundingClientRect()
+      case 0: return; // no tool
+      case 1: // line
         // recalculate original point
         newLine.bo.a.x /= zoom
         newLine.bo.a.y /= zoom
@@ -163,10 +225,15 @@ window.onload = function () {
           drawnObjects.push(new DrawnObject(newLine, pageNumber))
           newLine = new Line(new Boundaries(new Point(0, 0), new Point(0, 0)), false)
         }
-        break;
-      case 2:
+        break
+      case 2: //brush
         if (brushIsDrawing) finishBrushStroke()
-        break;
+        break
+      case 3: // text
+        newText.anchor.x = (e.clientX - rect.left) / zoom
+        newText.anchor.y = (e.clientY - rect.top) / zoom
+        carretVisible = true
+        break
     }
   }
 
@@ -181,7 +248,7 @@ window.onload = function () {
         newLine.bo.b.y = e.clientY - rect.top
         break
       case 2:
-        if (!brushIsDrawing) break;
+        if (!brushIsDrawing) break
         brushCurrentPoint.x = e.clientX - rect.left
         brushCurrentPoint.y = e.clientY - rect.top
         if (Math.abs(brushCurrentPoint.x - brushLastPoint.x) > 3 || Math.abs(brushCurrentPoint.y - brushLastPoint.y) > 20) {
@@ -229,8 +296,12 @@ window.onload = function () {
             ctx.stroke()
           }
           ctx.closePath()
+        } else if (object.obj instanceof TypedText) {
+          let fontsize = 30 * zoom
+          ctx.font = fontsize + "px Arial"
+          ctx.fillText(object.obj.text, object.obj.anchor.x * zoom, object.obj.anchor.y * zoom)
         }
-      });
+      })
 
       // draw current line
       ctx.lineWidth = 2 * zoom
@@ -239,7 +310,7 @@ window.onload = function () {
       if (newLine.editing) {
         ctx.moveTo(newLine.bo.a.x, newLine.bo.a.y)
         ctx.lineTo(newLine.bo.b.x, newLine.bo.b.y)
-        ctx.stroke();
+        ctx.stroke()
       }
       // draw current brush
       ctx.lineWidth = 10 * zoom
@@ -254,6 +325,21 @@ window.onload = function () {
         }
         ctx.closePath()
       }
+      // draw current text
+      let fontsize = 30 * zoom
+      ctx.font = fontsize + "px Arial"
+      ctx.fillText(newText.text, newText.anchor.x * zoom, newText.anchor.y * zoom)
+      // draw text carret
+      if (carretVisible && carretOn) {
+        ctx.lineWidth = 2 * zoom
+        ctx.strokeStyle = "black"
+        ctx.beginPath()
+        let carretX = ctx.measureText(newText.text.substring(0, carretCharPosition)).width + 1
+        ctx.moveTo((newText.anchor.x * zoom) + carretX, newText.anchor.y * zoom)
+        ctx.lineTo((newText.anchor.x * zoom) + carretX, (newText.anchor.y * zoom) - fontsize)
+        ctx.stroke()
+        ctx.closePath()
+      }
     }
 
 
@@ -261,13 +347,21 @@ window.onload = function () {
   }
 
   function finishBrushStroke() {
-    brushIsDrawing = false;
+    brushIsDrawing = false
     brushPoints.forEach(point => {
       point.x /= zoom
       point.y /= zoom
     })
     drawnObjects.push(new DrawnObject(new BrushStroke(brushPoints), pageNumber))
     brushPoints = []
+  }
+
+  function finishText() {
+    console.info({ newText })
+    carretVisible = false
+    textTyping = false
+    drawnObjects.push(new DrawnObject(newText, pageNumber))
+    newText = new TypedText('', new Point(0, 0), false)
   }
 
   // 1 = original, 2 = my edit, 3 = solution
@@ -283,13 +377,7 @@ window.onload = function () {
     if (version == 3) image.src = 'img/' + pageNumber.toString() + '_r.png'
   }
 
-};
-// switch (tool) {
-//   case 0: return;
-//   case 1:
-//     break;
-//   case 2:
-//     break;
-// }
+}
+
 
 
