@@ -19,7 +19,7 @@ class BrushStroke {
   }
 }
 class TypedText {
-  constructor(public text: string, public anchor: Point, public editing: boolean) {
+  constructor(public text: string, public bo: Boundaries, public editing: boolean) {
   }
 }
 
@@ -33,10 +33,11 @@ var drawnObjects = new Array<DrawnObject>()
 var newLine = new Line(new Boundaries(new Point(0, 0), new Point(0, 0)), false)
 var brushIsDrawing = false
 var textTyping = false
+var drawingTextBoundary = false
 var carretVisible = false // if the text carret should be blinking
 var carretOn = false // if the text carret is currently visible, should switch back and forth periodically
 var carretCharPosition = 0 // 0 = beginning, 1 = after first char, 5 = after 5th char
-var newText = new TypedText('', new Point(0, 0), false)
+var newText = new TypedText('', new Boundaries(new Point(0, 0), new Point(0, 0)), false)
 var brushPoints = new Array<Point>()
 var brushLastPoint = new Point(0, 0)
 var brushCurrentPoint = new Point(0, 0)
@@ -150,6 +151,7 @@ window.onload = function () {
   function handleKeyUp(e: KeyboardEvent) {
     console.info('key ' + e.keyCode)
     if (e.keyCode > 48) {
+      //newText.text = [newText.text.slice(0, carretCharPosition), e.key, newText.text.slice(carretCharPosition)].join('')
       newText.text += e.key
       carretCharPosition += 1
     } else {
@@ -160,12 +162,18 @@ window.onload = function () {
         case 35: // end
           carretCharPosition = newText.text.length
           break
+        case 32: // space
+          newText.text = [newText.text.slice(0, carretCharPosition), ' ', newText.text.slice(carretCharPosition)].join('')
+          carretCharPosition += 1
+          break
         case 36: // home
           carretCharPosition = 0
           break
         case 8: //backspace
-          newText.text = newText.text.slice(0, carretCharPosition - 1) + newText.text.slice(carretCharPosition);
-          carretCharPosition -= 1
+          if (carretCharPosition > 0) {
+            newText.text = newText.text.slice(0, carretCharPosition - 1) + newText.text.slice(carretCharPosition);
+            carretCharPosition -= 1
+          }
           break
         case 46: //delete
           if (carretCharPosition < newText.text.length)
@@ -200,7 +208,11 @@ window.onload = function () {
         brushIsDrawing = true
         break
       case 3:
-        textTyping = true
+        newText.bo.a.x = (e.clientX - rect.left) / zoom
+        newText.bo.a.y = (e.clientY - rect.top) / zoom
+        newText.bo.b.x = (e.clientX - rect.left) / zoom
+        newText.bo.b.y = (e.clientY - rect.top) / zoom
+        drawingTextBoundary = true
         break
     }
   }
@@ -230,9 +242,14 @@ window.onload = function () {
         if (brushIsDrawing) finishBrushStroke()
         break
       case 3: // text
-        newText.anchor.x = (e.clientX - rect.left) / zoom
-        newText.anchor.y = (e.clientY - rect.top) / zoom
+        newText.bo.b.x = (e.clientX - rect.left) / zoom
+        newText.bo.b.y = (e.clientY - rect.top) / zoom
+        if (newText.bo.a.x > newText.bo.b.x && newText.bo.a.y > newText.bo.b.y) {
+          // switch point coordinates
+        }
         carretVisible = true
+        textTyping = true
+        drawingTextBoundary = false
         break
     }
   }
@@ -257,6 +274,12 @@ window.onload = function () {
           brushCurrentPoint = new Point(e.clientX - rect.left, e.clientY - rect.top)
         }
         if (brushPoints.length >= MAX_BRUSH_POINT_COUNT) finishBrushStroke()
+        break
+      case 3: // text
+        if (drawingTextBoundary) {
+          newText.bo.b.x = (e.clientX - rect.left) / zoom
+          newText.bo.b.y = (e.clientY - rect.top) / zoom
+        }
         break
     }
   }
@@ -299,7 +322,7 @@ window.onload = function () {
         } else if (object.obj instanceof TypedText) {
           let fontsize = 30 * zoom
           ctx.font = fontsize + "px Arial"
-          ctx.fillText(object.obj.text, object.obj.anchor.x * zoom, object.obj.anchor.y * zoom)
+          ctx.fillText(object.obj.text, object.obj.bo.a.x * zoom, (object.obj.bo.a.y + fontsize) * zoom)
         }
       })
 
@@ -328,15 +351,22 @@ window.onload = function () {
       // draw current text
       let fontsize = 30 * zoom
       ctx.font = fontsize + "px Arial"
-      ctx.fillText(newText.text, newText.anchor.x * zoom, newText.anchor.y * zoom)
+      ctx.fillText(newText.text, newText.bo.a.x * zoom, (newText.bo.a.y + fontsize) * zoom)
+      // draw boundary
+      ctx.lineWidth = 1 * zoom
+      ctx.strokeStyle = "rgba(0,0,0,0.3)"
+      ctx.beginPath()
+      ctx.rect(newText.bo.a.x, newText.bo.a.y, newText.bo.b.x - newText.bo.a.x, newText.bo.b.y - newText.bo.a.y)
+      ctx.stroke()
+      ctx.closePath()
       // draw text carret
       if (carretVisible && carretOn) {
         ctx.lineWidth = 2 * zoom
         ctx.strokeStyle = "black"
         ctx.beginPath()
         let carretX = ctx.measureText(newText.text.substring(0, carretCharPosition)).width + 1
-        ctx.moveTo((newText.anchor.x * zoom) + carretX, newText.anchor.y * zoom)
-        ctx.lineTo((newText.anchor.x * zoom) + carretX, (newText.anchor.y * zoom) - fontsize)
+        ctx.moveTo((newText.bo.a.x * zoom) + carretX, newText.bo.a.y * zoom)
+        ctx.lineTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + fontsize)
         ctx.stroke()
         ctx.closePath()
       }
@@ -361,7 +391,7 @@ window.onload = function () {
     carretVisible = false
     textTyping = false
     drawnObjects.push(new DrawnObject(newText, pageNumber))
-    newText = new TypedText('', new Point(0, 0), false)
+    newText = new TypedText('', new Boundaries(new Point(0, 0), new Point(0, 0)), false)
   }
 
   // 1 = original, 2 = my edit, 3 = solution
