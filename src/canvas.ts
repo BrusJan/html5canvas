@@ -19,11 +19,12 @@ class BrushStroke {
   }
 }
 class TypedText {
-  constructor(public text: string, public bo: Boundaries, public editing: boolean) {
+  constructor(public text: string[], public bo: Boundaries, public editing: boolean) {
   }
 }
 
 var MAX_BRUSH_POINT_COUNT = 100
+var FONTSIZE = 30
 var cvWidth = 600
 var cvHeight = 800
 var tool = 0 // 0 = none, 1 = line, 2 = text
@@ -37,7 +38,7 @@ var drawingTextBoundary = false
 var carretVisible = false // if the text carret should be blinking
 var carretOn = false // if the text carret is currently visible, should switch back and forth periodically
 var carretCharPosition = 0 // 0 = beginning, 1 = after first char, 5 = after 5th char
-var newText = new TypedText('', new Boundaries(new Point(0, 0), new Point(0, 0)), false)
+var newText = new TypedText([''], new Boundaries(new Point(0, 0), new Point(0, 0)), false)
 var brushPoints = new Array<Point>()
 var brushLastPoint = new Point(0, 0)
 var brushCurrentPoint = new Point(0, 0)
@@ -51,19 +52,19 @@ function setTool(t: number) {
   tool = t
   switch (t) {
     case 1:
-      document.getElementById('line')?.classList.replace('enabled', 'disabled')
-      document.getElementById('brush')?.classList.replace('disabled', 'enabled')
-      document.getElementById('text')?.classList.replace('disabled', 'enabled')
+      (<HTMLButtonElement>document.getElementById('line')).classList.replace('enabled', 'disabled');
+      (<HTMLButtonElement>document.getElementById('brush')).classList.replace('disabled', 'enabled');
+      (<HTMLButtonElement>document.getElementById('text')).classList.replace('disabled', 'enabled');
       break
     case 2:
-      document.getElementById('line')?.classList.replace('disabled', 'enabled')
-      document.getElementById('brush')?.classList.replace('enabled', 'disabled')
-      document.getElementById('text')?.classList.replace('disabled', 'enabled')
+      (<HTMLButtonElement>document.getElementById('line')).classList.replace('disabled', 'enabled');
+      (<HTMLButtonElement>document.getElementById('brush')).classList.replace('enabled', 'disabled');
+      (<HTMLButtonElement>document.getElementById('text')).classList.replace('disabled', 'enabled');
       break
     case 3:
-      document.getElementById('line')?.classList.replace('disabled', 'enabled')
-      document.getElementById('brush')?.classList.replace('disabled', 'enabled')
-      document.getElementById('text')?.classList.replace('enabled', 'disabled')
+      (<HTMLButtonElement>document.getElementById('line')).classList.replace('disabled', 'enabled');
+      (<HTMLButtonElement>document.getElementById('brush')).classList.replace('disabled', 'enabled');
+      (<HTMLButtonElement>document.getElementById('text')).classList.replace('enabled', 'disabled');
       break
   }
 }
@@ -90,13 +91,13 @@ window.onload = function () {
   cv.addEventListener("mousemove", handleMouseMove)
   cv.addEventListener("keyup", handleKeyUp)
 
-  this.setInterval(() => {
-    if (this.carretVisible) {
-      this.carretOn = !this.carretOn
+  window.setInterval(() => {
+    if (carretVisible) {
+      carretOn = !carretOn
     }
   }, 500)
 
-  // first call, calls request animation frame inside co it cycles inside after this one call
+  // first call, calls request animation frame inside so it cycles inside after this one call
   redrawCanvas()
 
   inputPageNumber.addEventListener("change", function (event) {
@@ -151,19 +152,17 @@ window.onload = function () {
   function handleKeyUp(e: KeyboardEvent) {
     console.info('key ' + e.keyCode)
     if (e.keyCode > 48) {
-      //newText.text = [newText.text.slice(0, carretCharPosition), e.key, newText.text.slice(carretCharPosition)].join('')
-      newText.text += e.key
+      newText.text[newText.text.length - 1] += e.key
       carretCharPosition += 1
     } else {
       switch (e.keyCode) {
         case 13: // enter
-          finishText()
           break
         case 35: // end
           carretCharPosition = newText.text.length
           break
         case 32: // space
-          newText.text = [newText.text.slice(0, carretCharPosition), ' ', newText.text.slice(carretCharPosition)].join('')
+          newText.text[newText.text.length - 1] = [newText.text[newText.text.length - 1].slice(0, carretCharPosition), ' ', newText.text[newText.text.length - 1].slice(carretCharPosition)].join('')
           carretCharPosition += 1
           break
         case 36: // home
@@ -171,13 +170,13 @@ window.onload = function () {
           break
         case 8: //backspace
           if (carretCharPosition > 0) {
-            newText.text = newText.text.slice(0, carretCharPosition - 1) + newText.text.slice(carretCharPosition);
+            newText.text[newText.text.length - 1] = newText.text[newText.text.length - 1].slice(0, carretCharPosition - 1) + newText.text[newText.text.length - 1].slice(carretCharPosition);
             carretCharPosition -= 1
           }
           break
         case 46: //delete
           if (carretCharPosition < newText.text.length)
-            newText.text = newText.text.slice(0, carretCharPosition) + newText.text.slice(carretCharPosition + 1);
+            newText.text[newText.text.length - 1] = newText.text[newText.text.length - 1].slice(0, carretCharPosition) + newText.text[newText.text.length - 1].slice(carretCharPosition + 1);
           break
         case 37: // left arrow
           if (carretCharPosition > 0) carretCharPosition -= 1
@@ -208,11 +207,13 @@ window.onload = function () {
         brushIsDrawing = true
         break
       case 3:
-        newText.bo.a.x = (e.clientX - rect.left) / zoom
-        newText.bo.a.y = (e.clientY - rect.top) / zoom
-        newText.bo.b.x = (e.clientX - rect.left) / zoom
-        newText.bo.b.y = (e.clientY - rect.top) / zoom
-        drawingTextBoundary = true
+        if (!textTyping) {
+          newText.bo.a.x = (e.clientX - rect.left) / zoom
+          newText.bo.a.y = (e.clientY - rect.top) / zoom
+          newText.bo.b.x = (e.clientX - rect.left) / zoom
+          newText.bo.b.y = (e.clientY - rect.top) / zoom
+          drawingTextBoundary = true
+        }
         break
     }
   }
@@ -242,14 +243,35 @@ window.onload = function () {
         if (brushIsDrawing) finishBrushStroke()
         break
       case 3: // text
-        newText.bo.b.x = (e.clientX - rect.left) / zoom
-        newText.bo.b.y = (e.clientY - rect.top) / zoom
-        if (newText.bo.a.x > newText.bo.b.x && newText.bo.a.y > newText.bo.b.y) {
-          // switch point coordinates
+        if (!textTyping) { // set end point of boundaries, turn on carret, start typing, stop drawing boundary
+          newText.bo.b.x = (e.clientX - rect.left) / zoom
+          newText.bo.b.y = (e.clientY - rect.top) / zoom
+          if (newText.bo.a.x > newText.bo.b.x) { // switch x so a is always left top corner
+            let tempX = newText.bo.a.x
+            newText.bo.a.x = newText.bo.b.x
+            newText.bo.b.x = tempX
+          }
+          if (newText.bo.a.y > newText.bo.b.y) { // switch y so a is always left top corner
+            let tempY = newText.bo.a.y
+            newText.bo.a.y = newText.bo.b.y
+            newText.bo.b.y = tempY
+          }
+          if (newText.bo.b.x - newText.bo.a.x < FONTSIZE) {
+            newText.bo.b.x = newText.bo.a.x + FONTSIZE
+          }
+          if (newText.bo.b.y - newText.bo.a.y < FONTSIZE) {
+            newText.bo.b.y = newText.bo.a.y + FONTSIZE
+          }
+          carretVisible = true
+          textTyping = true
+          drawingTextBoundary = false
+        } else {
+          // if click is away from boundaries, finish text
+          if ((e.clientX - rect.left) / zoom < newText.bo.a.x || (e.clientX - rect.left) / zoom > newText.bo.b.x
+            || (e.clientY - rect.top) / zoom < newText.bo.a.y || (e.clientY - rect.top) / zoom > newText.bo.b.y) {
+            finishText()
+          }
         }
-        carretVisible = true
-        textTyping = true
-        drawingTextBoundary = false
         break
     }
   }
@@ -322,7 +344,7 @@ window.onload = function () {
         } else if (object.obj instanceof TypedText) {
           let fontsize = 30 * zoom
           ctx.font = fontsize + "px Arial"
-          ctx.fillText(object.obj.text, object.obj.bo.a.x * zoom, (object.obj.bo.a.y + fontsize) * zoom)
+          ctx.fillText(object.obj.text[object.obj.text.length - 1], object.obj.bo.a.x * zoom, (object.obj.bo.a.y + fontsize) * zoom)
         }
       })
 
@@ -349,14 +371,18 @@ window.onload = function () {
         ctx.closePath()
       }
       // draw current text
-      let fontsize = 30 * zoom
+      let fontsize = FONTSIZE * zoom
       ctx.font = fontsize + "px Arial"
-      ctx.fillText(newText.text, newText.bo.a.x * zoom, (newText.bo.a.y + fontsize) * zoom)
+      for (let i = 0; i < newText.text.length; i++) {
+        // draw each line of text
+        console.info('drawing text: ' + newText.text[i])
+        ctx.fillText(newText.text[i], newText.bo.a.x * zoom, ((newText.bo.a.y * zoom) + (fontsize * (i+1))))
+      }      
       // draw boundary
       ctx.lineWidth = 1 * zoom
       ctx.strokeStyle = "rgba(0,0,0,0.3)"
       ctx.beginPath()
-      ctx.rect(newText.bo.a.x, newText.bo.a.y, newText.bo.b.x - newText.bo.a.x, newText.bo.b.y - newText.bo.a.y)
+      ctx.rect(newText.bo.a.x * zoom, newText.bo.a.y * zoom, (newText.bo.b.x - newText.bo.a.x) * zoom, (newText.bo.b.y - newText.bo.a.y) * zoom)
       ctx.stroke()
       ctx.closePath()
       // draw text carret
@@ -364,9 +390,9 @@ window.onload = function () {
         ctx.lineWidth = 2 * zoom
         ctx.strokeStyle = "black"
         ctx.beginPath()
-        let carretX = ctx.measureText(newText.text.substring(0, carretCharPosition)).width + 1
-        ctx.moveTo((newText.bo.a.x * zoom) + carretX, newText.bo.a.y * zoom)
-        ctx.lineTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + fontsize)
+        let carretX = ctx.measureText(newText.text[newText.text.length - 1].substring(0, carretCharPosition)).width + 1
+        ctx.moveTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + (fontsize * newText.text.length - 1))
+        ctx.lineTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + (fontsize * newText.text.length))
         ctx.stroke()
         ctx.closePath()
       }
@@ -391,7 +417,7 @@ window.onload = function () {
     carretVisible = false
     textTyping = false
     drawnObjects.push(new DrawnObject(newText, pageNumber))
-    newText = new TypedText('', new Boundaries(new Point(0, 0), new Point(0, 0)), false)
+    newText = new TypedText([''], new Boundaries(new Point(0, 0), new Point(0, 0)), false)
   }
 
   // 1 = original, 2 = my edit, 3 = solution

@@ -42,6 +42,7 @@ var TypedText = /** @class */ (function () {
     return TypedText;
 }());
 var MAX_BRUSH_POINT_COUNT = 100;
+var FONTSIZE = 30;
 var cvWidth = 600;
 var cvHeight = 800;
 var tool = 0; // 0 = none, 1 = line, 2 = text
@@ -55,7 +56,7 @@ var drawingTextBoundary = false;
 var carretVisible = false; // if the text carret should be blinking
 var carretOn = false; // if the text carret is currently visible, should switch back and forth periodically
 var carretCharPosition = 0; // 0 = beginning, 1 = after first char, 5 = after 5th char
-var newText = new TypedText('', new Boundaries(new Point(0, 0), new Point(0, 0)), false);
+var newText = new TypedText([''], new Boundaries(new Point(0, 0), new Point(0, 0)), false);
 var brushPoints = new Array();
 var brushLastPoint = new Point(0, 0);
 var brushCurrentPoint = new Point(0, 0);
@@ -64,23 +65,22 @@ var imgDone = new Image();
 var imgUsr = new Image();
 var pageNumber = 1;
 function setTool(t) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     tool = t;
     switch (t) {
         case 1:
-            (_a = document.getElementById('line')) === null || _a === void 0 ? void 0 : _a.classList.replace('enabled', 'disabled');
-            (_b = document.getElementById('brush')) === null || _b === void 0 ? void 0 : _b.classList.replace('disabled', 'enabled');
-            (_c = document.getElementById('text')) === null || _c === void 0 ? void 0 : _c.classList.replace('disabled', 'enabled');
+            document.getElementById('line').classList.replace('enabled', 'disabled');
+            document.getElementById('brush').classList.replace('disabled', 'enabled');
+            document.getElementById('text').classList.replace('disabled', 'enabled');
             break;
         case 2:
-            (_d = document.getElementById('line')) === null || _d === void 0 ? void 0 : _d.classList.replace('disabled', 'enabled');
-            (_e = document.getElementById('brush')) === null || _e === void 0 ? void 0 : _e.classList.replace('enabled', 'disabled');
-            (_f = document.getElementById('text')) === null || _f === void 0 ? void 0 : _f.classList.replace('disabled', 'enabled');
+            document.getElementById('line').classList.replace('disabled', 'enabled');
+            document.getElementById('brush').classList.replace('enabled', 'disabled');
+            document.getElementById('text').classList.replace('disabled', 'enabled');
             break;
         case 3:
-            (_g = document.getElementById('line')) === null || _g === void 0 ? void 0 : _g.classList.replace('disabled', 'enabled');
-            (_h = document.getElementById('brush')) === null || _h === void 0 ? void 0 : _h.classList.replace('disabled', 'enabled');
-            (_j = document.getElementById('text')) === null || _j === void 0 ? void 0 : _j.classList.replace('enabled', 'disabled');
+            document.getElementById('line').classList.replace('disabled', 'enabled');
+            document.getElementById('brush').classList.replace('disabled', 'enabled');
+            document.getElementById('text').classList.replace('enabled', 'disabled');
             break;
     }
 }
@@ -91,7 +91,6 @@ function zoomCanvas(z) {
         ispan.innerHTML = 'zoom ' + zoom.toString();
 }
 window.onload = function () {
-    var _this = this;
     setTool(0);
     setImgSrc();
     var cv = document.getElementById('canvas');
@@ -107,12 +106,12 @@ window.onload = function () {
     cv.addEventListener("mouseup", handleMouseUp);
     cv.addEventListener("mousemove", handleMouseMove);
     cv.addEventListener("keyup", handleKeyUp);
-    this.setInterval(function () {
-        if (_this.carretVisible) {
-            _this.carretOn = !_this.carretOn;
+    window.setInterval(function () {
+        if (carretVisible) {
+            carretOn = !carretOn;
         }
     }, 500);
-    // first call, calls request animation frame inside co it cycles inside after this one call
+    // first call, calls request animation frame inside so it cycles inside after this one call
     redrawCanvas();
     inputPageNumber.addEventListener("change", function (event) {
         pageNumber = +inputPageNumber.value;
@@ -165,20 +164,18 @@ window.onload = function () {
     function handleKeyUp(e) {
         console.info('key ' + e.keyCode);
         if (e.keyCode > 48) {
-            //newText.text = [newText.text.slice(0, carretCharPosition), e.key, newText.text.slice(carretCharPosition)].join('')
-            newText.text += e.key;
+            newText.text[newText.text.length - 1] += e.key;
             carretCharPosition += 1;
         }
         else {
             switch (e.keyCode) {
                 case 13: // enter
-                    finishText();
                     break;
                 case 35: // end
                     carretCharPosition = newText.text.length;
                     break;
                 case 32: // space
-                    newText.text = [newText.text.slice(0, carretCharPosition), ' ', newText.text.slice(carretCharPosition)].join('');
+                    newText.text[newText.text.length - 1] = [newText.text[newText.text.length - 1].slice(0, carretCharPosition), ' ', newText.text[newText.text.length - 1].slice(carretCharPosition)].join('');
                     carretCharPosition += 1;
                     break;
                 case 36: // home
@@ -186,13 +183,13 @@ window.onload = function () {
                     break;
                 case 8: //backspace
                     if (carretCharPosition > 0) {
-                        newText.text = newText.text.slice(0, carretCharPosition - 1) + newText.text.slice(carretCharPosition);
+                        newText.text[newText.text.length - 1] = newText.text[newText.text.length - 1].slice(0, carretCharPosition - 1) + newText.text[newText.text.length - 1].slice(carretCharPosition);
                         carretCharPosition -= 1;
                     }
                     break;
                 case 46: //delete
                     if (carretCharPosition < newText.text.length)
-                        newText.text = newText.text.slice(0, carretCharPosition) + newText.text.slice(carretCharPosition + 1);
+                        newText.text[newText.text.length - 1] = newText.text[newText.text.length - 1].slice(0, carretCharPosition) + newText.text[newText.text.length - 1].slice(carretCharPosition + 1);
                     break;
                 case 37: // left arrow
                     if (carretCharPosition > 0)
@@ -226,11 +223,13 @@ window.onload = function () {
                 brushIsDrawing = true;
                 break;
             case 3:
-                newText.bo.a.x = (e.clientX - rect.left) / zoom;
-                newText.bo.a.y = (e.clientY - rect.top) / zoom;
-                newText.bo.b.x = (e.clientX - rect.left) / zoom;
-                newText.bo.b.y = (e.clientY - rect.top) / zoom;
-                drawingTextBoundary = true;
+                if (!textTyping) {
+                    newText.bo.a.x = (e.clientX - rect.left) / zoom;
+                    newText.bo.a.y = (e.clientY - rect.top) / zoom;
+                    newText.bo.b.x = (e.clientX - rect.left) / zoom;
+                    newText.bo.b.y = (e.clientY - rect.top) / zoom;
+                    drawingTextBoundary = true;
+                }
                 break;
         }
     }
@@ -261,14 +260,36 @@ window.onload = function () {
                     finishBrushStroke();
                 break;
             case 3: // text
-                newText.bo.b.x = (e.clientX - rect.left) / zoom;
-                newText.bo.b.y = (e.clientY - rect.top) / zoom;
-                if (newText.bo.a.x > newText.bo.b.x && newText.bo.a.y > newText.bo.b.y) {
-                    // switch point coordinates
+                if (!textTyping) { // set end point of boundaries, turn on carret, start typing, stop drawing boundary
+                    newText.bo.b.x = (e.clientX - rect.left) / zoom;
+                    newText.bo.b.y = (e.clientY - rect.top) / zoom;
+                    if (newText.bo.a.x > newText.bo.b.x) { // switch x so a is always left top corner
+                        var tempX = newText.bo.a.x;
+                        newText.bo.a.x = newText.bo.b.x;
+                        newText.bo.b.x = tempX;
+                    }
+                    if (newText.bo.a.y > newText.bo.b.y) { // switch y so a is always left top corner
+                        var tempY = newText.bo.a.y;
+                        newText.bo.a.y = newText.bo.b.y;
+                        newText.bo.b.y = tempY;
+                    }
+                    if (newText.bo.b.x - newText.bo.a.x < FONTSIZE) {
+                        newText.bo.b.x = newText.bo.a.x + FONTSIZE;
+                    }
+                    if (newText.bo.b.y - newText.bo.a.y < FONTSIZE) {
+                        newText.bo.b.y = newText.bo.a.y + FONTSIZE;
+                    }
+                    carretVisible = true;
+                    textTyping = true;
+                    drawingTextBoundary = false;
                 }
-                carretVisible = true;
-                textTyping = true;
-                drawingTextBoundary = false;
+                else {
+                    // if click is away from boundaries, finish text
+                    if ((e.clientX - rect.left) / zoom < newText.bo.a.x || (e.clientX - rect.left) / zoom > newText.bo.b.x
+                        || (e.clientY - rect.top) / zoom < newText.bo.a.y || (e.clientY - rect.top) / zoom > newText.bo.b.y) {
+                        finishText();
+                    }
+                }
                 break;
         }
     }
@@ -343,7 +364,7 @@ window.onload = function () {
                 else if (object.obj instanceof TypedText) {
                     var fontsize_1 = 30 * zoom;
                     ctx.font = fontsize_1 + "px Arial";
-                    ctx.fillText(object.obj.text, object.obj.bo.a.x * zoom, (object.obj.bo.a.y + fontsize_1) * zoom);
+                    ctx.fillText(object.obj.text[object.obj.text.length - 1], object.obj.bo.a.x * zoom, (object.obj.bo.a.y + fontsize_1) * zoom);
                 }
             });
             // draw current line
@@ -369,14 +390,18 @@ window.onload = function () {
                 ctx.closePath();
             }
             // draw current text
-            var fontsize = 30 * zoom;
+            var fontsize = FONTSIZE * zoom;
             ctx.font = fontsize + "px Arial";
-            ctx.fillText(newText.text, newText.bo.a.x * zoom, (newText.bo.a.y + fontsize) * zoom);
+            for (var i = 0; i < newText.text.length; i++) {
+                // draw each line of text
+                console.info('drawing text: ' + newText.text[i]);
+                ctx.fillText(newText.text[i], newText.bo.a.x * zoom, ((newText.bo.a.y * zoom) + (fontsize * (i + 1))));
+            }
             // draw boundary
             ctx.lineWidth = 1 * zoom;
             ctx.strokeStyle = "rgba(0,0,0,0.3)";
             ctx.beginPath();
-            ctx.rect(newText.bo.a.x, newText.bo.a.y, newText.bo.b.x - newText.bo.a.x, newText.bo.b.y - newText.bo.a.y);
+            ctx.rect(newText.bo.a.x * zoom, newText.bo.a.y * zoom, (newText.bo.b.x - newText.bo.a.x) * zoom, (newText.bo.b.y - newText.bo.a.y) * zoom);
             ctx.stroke();
             ctx.closePath();
             // draw text carret
@@ -384,9 +409,9 @@ window.onload = function () {
                 ctx.lineWidth = 2 * zoom;
                 ctx.strokeStyle = "black";
                 ctx.beginPath();
-                var carretX = ctx.measureText(newText.text.substring(0, carretCharPosition)).width + 1;
-                ctx.moveTo((newText.bo.a.x * zoom) + carretX, newText.bo.a.y * zoom);
-                ctx.lineTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + fontsize);
+                var carretX = ctx.measureText(newText.text[newText.text.length - 1].substring(0, carretCharPosition)).width + 1;
+                ctx.moveTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + (fontsize * newText.text.length - 1));
+                ctx.lineTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + (fontsize * newText.text.length));
                 ctx.stroke();
                 ctx.closePath();
             }
@@ -407,7 +432,7 @@ window.onload = function () {
         carretVisible = false;
         textTyping = false;
         drawnObjects.push(new DrawnObject(newText, pageNumber));
-        newText = new TypedText('', new Boundaries(new Point(0, 0), new Point(0, 0)), false);
+        newText = new TypedText([''], new Boundaries(new Point(0, 0), new Point(0, 0)), false);
     }
     // 1 = original, 2 = my edit, 3 = solution
     function switchVersion(v) {
