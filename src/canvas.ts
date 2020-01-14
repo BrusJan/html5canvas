@@ -38,6 +38,7 @@ var drawingTextBoundary = false
 var carretVisible = false // if the text carret should be blinking
 var carretOn = false // if the text carret is currently visible, should switch back and forth periodically
 var carretCharPosition = 0 // 0 = beginning, 1 = after first char, 5 = after 5th char
+var carretLinePosition = 0 // 0 = first line, 1 = second line, ...
 var newText = new TypedText([''], new Boundaries(new Point(0, 0), new Point(0, 0)), false)
 var brushPoints = new Array<Point>()
 var brushLastPoint = new Point(0, 0)
@@ -152,17 +153,21 @@ window.onload = function () {
   function handleKeyUp(e: KeyboardEvent) {
     console.info('key ' + e.keyCode)
     if (e.keyCode > 48) {
-      newText.text[newText.text.length - 1] += e.key
+      newText.text[carretLinePosition] += e.key
       carretCharPosition += 1
     } else {
       switch (e.keyCode) {
         case 13: // enter
+          newText.text.splice(carretLinePosition + 1, 0, newText.text[carretLinePosition].substring(carretCharPosition))
+          newText.text[carretLinePosition] = newText.text[carretLinePosition].substr(0, carretCharPosition)
+          carretLinePosition += 1
+          carretCharPosition = 0
           break
         case 35: // end
-          carretCharPosition = newText.text.length
+          carretCharPosition = newText.text[carretLinePosition].length
           break
         case 32: // space
-          newText.text[newText.text.length - 1] = [newText.text[newText.text.length - 1].slice(0, carretCharPosition), ' ', newText.text[newText.text.length - 1].slice(carretCharPosition)].join('')
+          newText.text[carretLinePosition] = [newText.text[carretLinePosition].slice(0, carretCharPosition), ' ', newText.text[carretLinePosition].slice(carretCharPosition)].join('')
           carretCharPosition += 1
           break
         case 36: // home
@@ -170,19 +175,49 @@ window.onload = function () {
           break
         case 8: //backspace
           if (carretCharPosition > 0) {
-            newText.text[newText.text.length - 1] = newText.text[newText.text.length - 1].slice(0, carretCharPosition - 1) + newText.text[newText.text.length - 1].slice(carretCharPosition);
+            newText.text[carretLinePosition] = newText.text[carretLinePosition].slice(0, carretCharPosition - 1) + newText.text[carretLinePosition].slice(carretCharPosition);
             carretCharPosition -= 1
+          } else if (newText.text.length > 1) { // if more than one line and carret position is 0, remove line
+            carretLinePosition -= 1
+            carretCharPosition = newText.text[carretLinePosition].length
+            newText.text.pop()
           }
           break
         case 46: //delete
-          if (carretCharPosition < newText.text.length)
-            newText.text[newText.text.length - 1] = newText.text[newText.text.length - 1].slice(0, carretCharPosition) + newText.text[newText.text.length - 1].slice(carretCharPosition + 1);
+          if (carretCharPosition < newText.text[carretLinePosition].length) {
+            newText.text[carretLinePosition] = newText.text[carretLinePosition].slice(0, carretCharPosition) + newText.text[carretLinePosition].slice(carretCharPosition + 1);
+          } else if (carretLinePosition < newText.text.length - 1) { // if carret line is not last but before last at least
+            newText.text[carretLinePosition] = newText.text[carretLinePosition + 1]
+            newText.text.splice(carretLinePosition + 1, 1)
+          }
           break
         case 37: // left arrow
           if (carretCharPosition > 0) carretCharPosition -= 1
+          else if (carretLinePosition > 0) {
+            carretLinePosition -= 1
+            carretCharPosition = newText.text[carretLinePosition].length
+          }
           break
         case 39: // right arrow
-          if (carretCharPosition < newText.text.length) carretCharPosition += 1
+          if (carretCharPosition < newText.text[carretLinePosition].length) carretCharPosition += 1
+          else if (carretLinePosition < newText.text.length - 1) {
+            carretLinePosition += 1
+            carretCharPosition = 0
+          }
+          break
+        case 38: // up arrow
+          if (carretLinePosition > 0) {
+            carretLinePosition -= 1
+            if (carretCharPosition > newText.text[carretLinePosition].length - 1)
+              carretCharPosition = newText.text[carretLinePosition].length
+          }
+          break
+        case 40: // down arrow
+          if (carretLinePosition < newText.text.length - 1) {
+            carretLinePosition += 1
+            if (carretCharPosition > newText.text[carretLinePosition].length - 1)
+              carretCharPosition = newText.text[carretLinePosition].length
+          }
           break
         case 16: break //shift
         default:
@@ -344,7 +379,10 @@ window.onload = function () {
         } else if (object.obj instanceof TypedText) {
           let fontsize = 30 * zoom
           ctx.font = fontsize + "px Arial"
-          ctx.fillText(object.obj.text[object.obj.text.length - 1], object.obj.bo.a.x * zoom, (object.obj.bo.a.y + fontsize) * zoom)
+          for (let i = 0; i < object.obj.text.length; i++) {
+            // draw each line of text
+            ctx.fillText(object.obj.text[i], object.obj.bo.a.x * zoom, ((object.obj.bo.a.y * zoom) + (fontsize * (i + 1))))
+          }
         }
       })
 
@@ -375,10 +413,9 @@ window.onload = function () {
       ctx.font = fontsize + "px Arial"
       for (let i = 0; i < newText.text.length; i++) {
         // draw each line of text
-        console.info('drawing text: ' + newText.text[i])
-        ctx.fillText(newText.text[i], newText.bo.a.x * zoom, ((newText.bo.a.y * zoom) + (fontsize * (i+1))))
-      }      
-      // draw boundary
+        ctx.fillText(newText.text[i], newText.bo.a.x * zoom, ((newText.bo.a.y * zoom) + (fontsize * (i + 1))))
+      }
+      // draw text boundary
       ctx.lineWidth = 1 * zoom
       ctx.strokeStyle = "rgba(0,0,0,0.3)"
       ctx.beginPath()
@@ -390,9 +427,9 @@ window.onload = function () {
         ctx.lineWidth = 2 * zoom
         ctx.strokeStyle = "black"
         ctx.beginPath()
-        let carretX = ctx.measureText(newText.text[newText.text.length - 1].substring(0, carretCharPosition)).width + 1
-        ctx.moveTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + (fontsize * newText.text.length - 1))
-        ctx.lineTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + (fontsize * newText.text.length))
+        let carretX = ctx.measureText(newText.text[carretLinePosition].substring(0, carretCharPosition)).width + 2
+        ctx.moveTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + fontsize * (carretLinePosition))
+        ctx.lineTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + fontsize * (carretLinePosition + 1))
         ctx.stroke()
         ctx.closePath()
       }
