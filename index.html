@@ -30,12 +30,11 @@
       </div>
     </div>
     <div class="left-toolbar">
-      <button id="line" class="enabled" onclick="setTool(1)"><img src="img/icons/pencil.png" alt="line"></button>
-      <button id="brush" class="enabled" onclick="setTool(2)"><img src="img/icons/brush.png" alt="brush"></button>
-      <button id="text" class="enabled" onclick="setTool(3)"><img src="img/icons/text.png" alt="text"></button>
-      <!-- <button id="text" onclick="setTool(3)">Text</button> -->
-      <button id="text" class="enabled" onclick="zoomCanvas(0.25)">+</button>
-      <button id="text" class="enabled" onclick="zoomCanvas(-0.25)">-</button>
+      <button id="line" class="enabled"><img src="img/icons/pencil.png" alt="line"></button>
+      <button id="brush" class="enabled"><img src="img/icons/brush.png" alt="brush"></button>
+      <button id="text" class="enabled"><img src="img/icons/text.png" alt="text"></button>
+      <button id="zoomin" class="enabled">+</button>
+      <button id="zoomout" class="enabled">-</button>
       <span id="i-tool">zoom 1</span>
     </div>
     <div class="canvasDiv">
@@ -43,7 +42,8 @@
     </div>
   </div>
 
-  <script src="dist/canvas.js"></script>
+  <script type="module" src="dist/classes/classes.js"></script>
+  <script type="module" src="dist/main.js"></script>
 </body>
 
 </html>
