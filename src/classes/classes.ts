@@ -1,13 +1,3 @@
-export class TypedText implements Drawable {
-  constructor(public text: string[], public bo: Boundaries, public editing: boolean) {
-  }
-  draw(ctx: CanvasRenderingContext2D, zoom: number): void {
-    let fontsize = 30 * zoom
-    ctx.font = fontsize + "px Arial"
-    ctx.fillText(this.text[this.text.length - 1], this.bo.a.x * zoom, (this.bo.a.y + fontsize) * zoom)
-  }
-  
-}
 export class DrawnObject {
   constructor(public obj: any, public pageNumber: number) {
   }
@@ -16,12 +6,12 @@ export class Point {
   constructor(public x: number, public y: number) {
   }
 }
-export class Boundaries {
+export class Boundary {
   constructor(public a: Point, public b: Point) {
   }
 }
 export class Line implements Drawable {
-  constructor(public bo: Boundaries, public editing: boolean) {
+  constructor(public bo: Boundary, public editing: boolean) {
   }
   draw(ctx: CanvasRenderingContext2D, zoom: number): void {
     ctx.lineWidth = 2 * zoom

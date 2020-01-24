@@ -1,4 +1,5 @@
-import { DrawnObject, Boundaries, Line, BrushStroke, Point, TypedText } from './classes/classes.js';
+import { DrawnObject, Boundary, Line, BrushStroke, Point } from './classes/classes.js';
+import { TypedText } from './classes/typed-text.js';
 
 var MAX_BRUSH_POINT_COUNT = 100
 var FONTSIZE = 30
@@ -8,14 +9,9 @@ var tool = 0 // 0 = none, 1 = line, 2 = text
 var version = 2 // 1 = original, 2 = my edit, 3 = solution
 var zoom = 1
 var drawnObjects = new Array<DrawnObject>()
-var newLine = new Line(new Boundaries(new Point(0, 0), new Point(0, 0)), false)
+var newLine = new Line(new Boundary(new Point(0, 0), new Point(0, 0)), false)
 var brushIsDrawing = false
-var textTyping = false
-var drawingTextBoundary = false
-var carretVisible = false // if the text carret should be blinking
-var carretOn = false // if the text carret is currently visible, should switch back and forth periodically
-var carretCharPosition = 0 // 0 = beginning, 1 = after first char, 5 = after 5th char
-var newText = new TypedText([''], new Boundaries(new Point(0, 0), new Point(0, 0)), false)
+var newText = TypedText.getNewTypedText();
 var brushPoints = new Array<Point>()
 var brushLastPoint = new Point(0, 0)
 var brushCurrentPoint = new Point(0, 0)
@@ -73,11 +69,6 @@ window.onload = function () {
   cv.addEventListener("mousemove", handleMouseMove)
   cv.addEventListener("keyup", handleKeyUp)
 
-  window.setInterval(() => {
-    if (carretVisible) {
-      carretOn = !carretOn
-    }
-  }, 500)
 
   // first call, calls request animation frame inside so it cycles inside after this one call
   redrawCanvas()
@@ -121,7 +112,6 @@ window.onload = function () {
     zoomCanvas(-0.25)
   })
 
-  // button prev page click must be async to redraw image after a small delay, otherwise it does not redraw
   function prevPage() {
     pageNumber = --pageNumber
     if (pageNumber < 1) {
@@ -134,7 +124,6 @@ window.onload = function () {
   var prevbtn = document.getElementById('btnPrevPage')
   if (prevbtn) prevbtn.onclick = prevPage
 
-  // button next page click must be async to redraw image after a small delay, otherwise it does not redraw
   function nextPage() {
     pageNumber = ++pageNumber
     if (pageNumber == 2) {
@@ -147,70 +136,29 @@ window.onload = function () {
   if (nextbtn) nextbtn.onclick = nextPage
 
   function handleKeyUp(e: KeyboardEvent) {
-    console.info('key ' + e.keyCode)
-    if (e.keyCode > 48) {
-      newText.text[newText.text.length - 1] += e.key
-      carretCharPosition += 1
-    } else {
-      switch (e.keyCode) {
-        case 13: // enter
-          break
-        case 35: // end
-          carretCharPosition = newText.text.length
-          break
-        case 32: // space
-          newText.text[newText.text.length - 1] = [newText.text[newText.text.length - 1].slice(0, carretCharPosition), ' ', newText.text[newText.text.length - 1].slice(carretCharPosition)].join('')
-          carretCharPosition += 1
-          break
-        case 36: // home
-          carretCharPosition = 0
-          break
-        case 8: //backspace
-          if (carretCharPosition > 0) {
-            newText.text[newText.text.length - 1] = newText.text[newText.text.length - 1].slice(0, carretCharPosition - 1) + newText.text[newText.text.length - 1].slice(carretCharPosition);
-            carretCharPosition -= 1
-          }
-          break
-        case 46: //delete
-          if (carretCharPosition < newText.text.length)
-            newText.text[newText.text.length - 1] = newText.text[newText.text.length - 1].slice(0, carretCharPosition) + newText.text[newText.text.length - 1].slice(carretCharPosition + 1);
-          break
-        case 37: // left arrow
-          if (carretCharPosition > 0) carretCharPosition -= 1
-          break
-        case 39: // right arrow
-          if (carretCharPosition < newText.text.length) carretCharPosition += 1
-          break
-        case 16: break //shift
-        default:
-          break
-      }
+    if (newText.textTyping) {
+      newText.handleKeyUp(e)
     }
-    console.info('newtext text' + newText.text)
   }
   function handleMouseDown(e: MouseEvent) {
     // do stuff only when version 2 is active (moje upravy)
     if (version != 2) return
     const rect = cv.getBoundingClientRect()
+    var x = e.clientX - rect.left
+    var y = e.clientY - rect.top
     switch (tool) {
       case 0: return
       case 1:
-        newLine = new Line(new Boundaries(new Point(e.clientX - rect.left, e.clientY - rect.top), new Point(e.clientX - rect.left, e.clientY - rect.top)), true)
+        newLine = new Line(new Boundary(new Point(x, y), new Point(x, y)), true)
         break
       case 2:
-        brushPoints.push(new Point(e.clientX - rect.left, e.clientY - rect.top))
-        brushCurrentPoint = new Point(e.clientX - rect.left, e.clientY - rect.top)
-        brushLastPoint = new Point(e.clientX - rect.left, e.clientY - rect.top)
+        brushPoints.push(new Point(x, y))
+        brushCurrentPoint = new Point(x, y)
+        brushLastPoint = new Point(x, y)
         brushIsDrawing = true
         break
       case 3:
-        if (!textTyping) {
-          newText.bo.a.x = (e.clientX - rect.left) / zoom
-          newText.bo.a.y = (e.clientY - rect.top) / zoom
-          newText.bo.b.x = (e.clientX - rect.left) / zoom
-          newText.bo.b.y = (e.clientY - rect.top) / zoom
-          drawingTextBoundary = true
-        }
+        newText.handleMouseDown(x, y, zoom)
         break
     }
   }
@@ -219,6 +167,8 @@ window.onload = function () {
     // do stuff only when version 2 is active (moje upravy)
     if (version != 2) return
     const rect = cv.getBoundingClientRect()
+    var x = e.clientX - rect.left
+    var y = e.clientY - rect.top
     switch (tool) {
       case 0: return; // no tool
       case 1: // line
@@ -226,49 +176,24 @@ window.onload = function () {
         newLine.bo.a.x /= zoom
         newLine.bo.a.y /= zoom
         // set end point
-        newLine.bo.b.x = (e.clientX - rect.left) / zoom
-        newLine.bo.b.y = (e.clientY - rect.top) / zoom
+        newLine.bo.b.x = x / zoom
+        newLine.bo.b.y = y / zoom
         newLine.editing = false
         // if line is too short, do not create it
         if (Math.abs(newLine.bo.a.x - newLine.bo.b.x) > 3 || Math.abs(newLine.bo.a.y - newLine.bo.b.y) > 3) {
           // object assign to create new object and not use the same refference over and over
           drawnObjects.push(new DrawnObject(newLine, pageNumber))
-          newLine = new Line(new Boundaries(new Point(0, 0), new Point(0, 0)), false)
+          newLine = new Line(new Boundary(new Point(0, 0), new Point(0, 0)), false)
         }
         break
       case 2: //brush
         if (brushIsDrawing) finishBrushStroke()
         break
-      case 3: // text
-        if (!textTyping) { // set end point of boundaries, turn on carret, start typing, stop drawing boundary
-          newText.bo.b.x = (e.clientX - rect.left) / zoom
-          newText.bo.b.y = (e.clientY - rect.top) / zoom
-          if (newText.bo.a.x > newText.bo.b.x) { // switch x so a is always left top corner
-            let tempX = newText.bo.a.x
-            newText.bo.a.x = newText.bo.b.x
-            newText.bo.b.x = tempX
-          }
-          if (newText.bo.a.y > newText.bo.b.y) { // switch y so a is always left top corner
-            let tempY = newText.bo.a.y
-            newText.bo.a.y = newText.bo.b.y
-            newText.bo.b.y = tempY
-          }
-          if (newText.bo.b.x - newText.bo.a.x < FONTSIZE) {
-            newText.bo.b.x = newText.bo.a.x + FONTSIZE
-          }
-          if (newText.bo.b.y - newText.bo.a.y < FONTSIZE) {
-            newText.bo.b.y = newText.bo.a.y + FONTSIZE
-          }
-          carretVisible = true
-          textTyping = true
-          drawingTextBoundary = false
-        } else {
+      case 3: // text        
+        if (newText.textTyping && !newText.isInsideBoundaries(x, y, zoom)) {
           // if click is away from boundaries, finish text
-          if ((e.clientX - rect.left) / zoom < newText.bo.a.x || (e.clientX - rect.left) / zoom > newText.bo.b.x
-            || (e.clientY - rect.top) / zoom < newText.bo.a.y || (e.clientY - rect.top) / zoom > newText.bo.b.y) {
-            finishText()
-          }
-        }
+          finishText()
+        } else newText.handleMouseUp(x, y, zoom)
         break
     }
   }
@@ -277,28 +202,27 @@ window.onload = function () {
     // do stuff only when version 2 is active (moje upravy)
     if (version != 2) return
     const rect = cv.getBoundingClientRect()
+    var x = e.clientX - rect.left
+    var y = e.clientY - rect.top
     switch (tool) {
       case 0: return
       case 1:
-        newLine.bo.b.x = e.clientX - rect.left
-        newLine.bo.b.y = e.clientY - rect.top
+        newLine.bo.b.x = x
+        newLine.bo.b.y = y
         break
       case 2:
         if (!brushIsDrawing) break
-        brushCurrentPoint.x = e.clientX - rect.left
-        brushCurrentPoint.y = e.clientY - rect.top
+        brushCurrentPoint.x = x
+        brushCurrentPoint.y = y
         if (Math.abs(brushCurrentPoint.x - brushLastPoint.x) > 3 || Math.abs(brushCurrentPoint.y - brushLastPoint.y) > 20) {
           brushPoints.push(brushCurrentPoint)
-          brushLastPoint = new Point(e.clientX - rect.left, e.clientY - rect.top)
-          brushCurrentPoint = new Point(e.clientX - rect.left, e.clientY - rect.top)
+          brushLastPoint = new Point(x, y)
+          brushCurrentPoint = new Point(x, y)
         }
         if (brushPoints.length >= MAX_BRUSH_POINT_COUNT) finishBrushStroke()
         break
       case 3: // text
-        if (drawingTextBoundary) {
-          newText.bo.b.x = (e.clientX - rect.left) / zoom
-          newText.bo.b.y = (e.clientY - rect.top) / zoom
-        }
+        newText.handleMouseMove(x, y, zoom)
         break
     }
   }
@@ -316,7 +240,7 @@ window.onload = function () {
 
     // draw all objects only if version 2 is active (moje upravy)
     if (version == 2) {
-      // draw objects
+      // draw finished objects
       drawnObjects.forEach(object => {
         if (object.pageNumber != pageNumber) return
         object.obj.draw(ctx, zoom)
@@ -324,9 +248,9 @@ window.onload = function () {
 
       // draw current line
       if (newLine.editing) {
-        newLine.draw(ctx,zoom)
+        newLine.draw(ctx, zoom)
       }
-      
+
       // draw current brush
       ctx.lineWidth = 10 * zoom
       ctx.strokeStyle = "red"
@@ -341,30 +265,7 @@ window.onload = function () {
         ctx.closePath()
       }
       // draw current text
-      let fontsize = FONTSIZE * zoom
-      ctx.font = fontsize + "px Arial"
-      for (let i = 0; i < newText.text.length; i++) {
-        // draw each line of text
-        ctx.fillText(newText.text[i], newText.bo.a.x * zoom, ((newText.bo.a.y * zoom) + (fontsize * (i+1))))
-      }      
-      // draw boundary
-      ctx.lineWidth = 1 * zoom
-      ctx.strokeStyle = "rgba(0,0,0,0.3)"
-      ctx.beginPath()
-      ctx.rect(newText.bo.a.x * zoom, newText.bo.a.y * zoom, (newText.bo.b.x - newText.bo.a.x) * zoom, (newText.bo.b.y - newText.bo.a.y) * zoom)
-      ctx.stroke()
-      ctx.closePath()
-      // draw text carret
-      if (carretVisible && carretOn) {
-        ctx.lineWidth = 2 * zoom
-        ctx.strokeStyle = "black"
-        ctx.beginPath()
-        let carretX = ctx.measureText(newText.text[newText.text.length - 1].substring(0, carretCharPosition)).width + 1
-        ctx.moveTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + (fontsize * (newText.text.length - 1)))
-        ctx.lineTo((newText.bo.a.x * zoom) + carretX, (newText.bo.a.y * zoom) + (fontsize * newText.text.length))
-        ctx.stroke()
-        ctx.closePath()
-      }
+      newText.draw(ctx, zoom)
     }
 
 
@@ -382,11 +283,10 @@ window.onload = function () {
   }
 
   function finishText() {
-    console.info({ newText })
-    carretVisible = false
-    textTyping = false
+    newText.finishText();
+
     drawnObjects.push(new DrawnObject(newText, pageNumber))
-    newText = new TypedText([''], new Boundaries(new Point(0, 0), new Point(0, 0)), false)
+    newText = TypedText.getNewTypedText();
   }
 
   // 1 = original, 2 = my edit, 3 = solution
