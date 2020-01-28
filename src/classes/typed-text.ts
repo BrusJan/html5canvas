@@ -63,22 +63,29 @@ export class TypedText implements Drawable {
     }
 
     handleKeyUp(e: KeyboardEvent): void {
+        //console.info(this)
+        //console.info(e)
         if (e.keyCode > 48) {
-            this.text[this.text.length - 1] += e.key
+            // insert a new char into this.text[this.carretLinePosition] at this.carretCharPosition index
+            this.text[this.carretLinePosition] = this.text[this.carretLinePosition].slice(0, this.carretCharPosition) + e.key + this.text[this.carretLinePosition].slice(this.carretCharPosition)
             this.carretCharPosition += 1
         } else {
             switch (e.keyCode) {
                 case 13: // enter
-                    this.text.splice(this.carretLinePosition, 0, this.text[this.carretLinePosition].substring(this.carretCharPosition));
-                    this.text[this.carretLinePosition] = this.text[this.carretLinePosition].substr(0, this.carretLinePosition)
+                    if (this.carretCharPosition == this.text[this.carretLinePosition].length) {
+                        this.text.splice(this.carretLinePosition + 1, 0, '');
+                    } else {
+                        this.text.splice(this.carretLinePosition + 1, 0, this.text[this.carretLinePosition].substring(this.carretCharPosition));
+                        this.text[this.carretLinePosition] = this.text[this.carretLinePosition].substr(0, this.carretCharPosition)
+                    }
                     this.carretCharPosition = 0
                     this.carretLinePosition++
                     break
                 case 35: // end
-                    this.carretCharPosition = this.text.length
+                    this.carretCharPosition = this.text[this.carretLinePosition].length
                     break
                 case 32: // space
-                    this.text[this.text.length - 1] = [this.text[this.text.length - 1].slice(0, this.carretCharPosition), ' ', this.text[this.text.length - 1].slice(this.carretCharPosition)].join('')
+                    this.text[this.carretLinePosition] = this.text[this.carretLinePosition].slice(0, this.carretCharPosition) + ' ' + this.text[this.carretLinePosition].slice(this.carretCharPosition)
                     this.carretCharPosition += 1
                     break
                 case 36: // home
@@ -86,19 +93,43 @@ export class TypedText implements Drawable {
                     break
                 case 8: //backspace
                     if (this.carretCharPosition > 0) {
-                        this.text[this.text.length - 1] = this.text[this.text.length - 1].slice(0, this.carretCharPosition - 1) + this.text[this.text.length - 1].slice(this.carretCharPosition);
+                        this.text[this.carretLinePosition] = this.text[this.carretLinePosition].slice(0, this.carretCharPosition - 1) + this.text[this.carretLinePosition].slice(this.carretCharPosition);
                         this.carretCharPosition -= 1
+                    } else if (this.carretLinePosition > 0) {
+                        this.carretLinePosition -= 1
+                        this.carretCharPosition = this.text[this.carretLinePosition].length
+                        this.text.splice(this.carretLinePosition + 1)
                     }
                     break
                 case 46: //delete
-                    if (this.carretCharPosition < this.text.length)
-                        this.text[this.text.length - 1] = this.text[this.text.length - 1].slice(0, this.carretCharPosition) + this.text[this.text.length - 1].slice(this.carretCharPosition + 1);
+                    if (this.carretCharPosition < this.text[this.carretLinePosition].length)
+                        this.text[this.carretLinePosition] = this.text[this.carretLinePosition].slice(0, this.carretCharPosition) + this.text[this.carretLinePosition].slice(this.carretCharPosition + 1);
+                    else if (this.carretLinePosition < this.text.length - 1) {
+                        this.text[this.carretLinePosition] = this.text[this.carretLinePosition] + this.text[this.carretLinePosition + 1]
+                        this.text.splice(this.carretLinePosition + 1)
+                    }
                     break
                 case 37: // left arrow
                     if (this.carretCharPosition > 0) this.carretCharPosition -= 1
+                    else if (this.carretLinePosition > 0) {
+                        this.carretLinePosition -= 1
+                        this.carretCharPosition = this.text[this.carretLinePosition].length
+                    }
                     break
                 case 39: // right arrow
-                    if (this.carretCharPosition < this.text.length) this.carretCharPosition += 1
+                    if (this.carretCharPosition < this.text[this.carretLinePosition].length) this.carretCharPosition += 1
+                    else if (this.carretLinePosition < this.text.length - 1) {
+                        this.carretLinePosition += 1
+                        this.carretCharPosition = 0
+                    }
+                    break
+                case 40: // down arrow
+                    if (this.carretLinePosition < this.text.length - 1) this.carretLinePosition += 1
+                    if (this.carretCharPosition > this.text[this.carretLinePosition].length) this.carretCharPosition = this.text[this.carretLinePosition].length
+                    break
+                case 38: // up arrow
+                    if (this.carretLinePosition > 0) this.carretLinePosition -= 1
+                    if (this.carretCharPosition > this.text[this.carretLinePosition].length) this.carretCharPosition = this.text[this.carretLinePosition].length
                     break
                 case 16: break //shift
                 default:
@@ -136,9 +167,9 @@ export class TypedText implements Drawable {
             ctx.lineWidth = 2 * zoom
             ctx.strokeStyle = "black"
             ctx.beginPath()
-            let carretX = ctx.measureText(this.text[this.text.length - 1].substring(0, this.carretCharPosition)).width + 1
-            ctx.moveTo((this.bo.a.x * zoom) + carretX, (this.bo.a.y * zoom) + (fontsize * (this.text.length - 1)))
-            ctx.lineTo((this.bo.a.x * zoom) + carretX, (this.bo.a.y * zoom) + (fontsize * this.text.length))
+            let carretX = ctx.measureText(this.text[this.carretLinePosition].substring(0, this.carretCharPosition)).width + 1
+            ctx.moveTo((this.bo.a.x * zoom) + carretX, (this.bo.a.y * zoom) + (fontsize * (this.carretLinePosition)))
+            ctx.lineTo((this.bo.a.x * zoom) + carretX, (this.bo.a.y * zoom) + (fontsize * (this.carretLinePosition + 1)))
             ctx.stroke()
             ctx.closePath()
         }
