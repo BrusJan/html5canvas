@@ -66,9 +66,16 @@ export class TypedText implements Drawable {
         //console.info(this)
         //console.info(e)
         if (e.keyCode > 48) {
-            // insert a new char into this.text[this.carretLinePosition] at this.carretCharPosition index
-            this.text[this.carretLinePosition] = this.text[this.carretLinePosition].slice(0, this.carretCharPosition) + e.key + this.text[this.carretLinePosition].slice(this.carretCharPosition)
-            this.carretCharPosition += 1
+            if (e.ctrlKey == true && e.key == 'v') {
+                navigator.clipboard.readText().then(data => {
+                    this.text[this.carretLinePosition] = this.text[this.carretLinePosition].slice(0, this.carretCharPosition) + data + this.text[this.carretLinePosition].slice(this.carretCharPosition)
+                    this.carretCharPosition += data.length
+                })
+            } else // insert a new char into this.text[this.carretLinePosition] at this.carretCharPosition index
+            {
+                this.text[this.carretLinePosition] = this.text[this.carretLinePosition].slice(0, this.carretCharPosition) + e.key + this.text[this.carretLinePosition].slice(this.carretCharPosition)
+                this.carretCharPosition += 1
+            }
         } else {
             switch (e.keyCode) {
                 case 13: // enter
@@ -168,7 +175,7 @@ export class TypedText implements Drawable {
             ctx.strokeStyle = "black"
             ctx.beginPath()
             let carretX = ctx.measureText(this.text[this.carretLinePosition].substring(0, this.carretCharPosition)).width + 1
-            ctx.moveTo((this.bo.a.x * zoom) + carretX, (this.bo.a.y * zoom) + (fontsize * (this.carretLinePosition)))
+            ctx.moveTo((this.bo.a.x * zoom) + carretX, (this.bo.a.y * zoom) + (fontsize * (this.carretLinePosition) + 5))
             ctx.lineTo((this.bo.a.x * zoom) + carretX, (this.bo.a.y * zoom) + (fontsize * (this.carretLinePosition + 1)))
             ctx.stroke()
             ctx.closePath()

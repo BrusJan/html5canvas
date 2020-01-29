@@ -248,7 +248,7 @@ window.onload = function () {
 
       // draw current line
       if (newLine.editing) {
-        newLine.draw(ctx, zoom)
+        newLine.draw(ctx, 1) // current line pixels fit mouse location, are recalculated by zoom on mouse up
       }
 
       // draw current brush
