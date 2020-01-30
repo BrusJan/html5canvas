@@ -113,7 +113,7 @@ export class TypedText implements Drawable {
                         this.text[this.carretLinePosition] = this.text[this.carretLinePosition].slice(0, this.carretCharPosition) + this.text[this.carretLinePosition].slice(this.carretCharPosition + 1);
                     else if (this.carretLinePosition < this.text.length - 1) {
                         this.text[this.carretLinePosition] = this.text[this.carretLinePosition] + this.text[this.carretLinePosition + 1]
-                        this.text.splice(this.carretLinePosition + 1)
+                        this.text.splice(this.carretLinePosition + 1, 1)
                     }
                     break
                 case 37: // left arrow
