@@ -19,14 +19,16 @@ input:focus, button:focus {
 }
 
 button {
-	width: 50px;
-    height: 50px;
-	border-radius: 6px;
+	width: 40px;
+    height: 40px;
 	color: #d5d5d5;
-	background: #606060;
-	border: none;
-	font-size: 2em;
-    color: rgb(163,211,199);
+	background: linear-gradient(0deg, rgb(180, 180, 180) 0%, rgb(228, 228, 228) 100%);
+	border: 1px solid;
+	border-top-color: #999999;
+	border-left-color: #999999;
+	border-right-color: #ffffff;
+	border-bottom-color: #ffffff;
+	color: black;
 }
 #canvas {
 	border: none;
@@ -45,12 +47,12 @@ button {
 .top-toolbar {
 	padding: 1em 0 0 5em;
 }
-.left-toolbar button {
-	margin: 2px;
+.toolbar button {
+	margin: -2px;
 }
-.left-toolbar {
-	float: left;
-	display: grid;
+.toolbar {
+	position: fixed;
+    bottom: 0;
 	margin: 1em;
 }
 .arrow {
