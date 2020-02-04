@@ -19,8 +19,8 @@ input:focus, button:focus {
 }
 
 button {
-	width: 40px;
-    height: 40px;
+	width: 50px;
+    height: 50px;
 	color: #d5d5d5;
 	background: linear-gradient(0deg, rgb(180, 180, 180) 0%, rgb(228, 228, 228) 100%);
 	border: 1px solid;
@@ -48,12 +48,18 @@ button {
 	padding: 1em 0 0 5em;
 }
 .toolbar button {
-	margin: -2px;
+	margin: -3px;
 }
 .toolbar {
 	position: fixed;
     bottom: 0;
 	margin: 1em;
+	left: 50%;
+    transform: translateX(-50%);
+}
+.toolbar img {
+	width: 35px;
+	height: 35px;
 }
 .arrow {
 	width: 50px;
@@ -64,33 +70,31 @@ button {
 	box-shadow: -1px -1px 2px rgba(0, 0, 0, .25) inset, 1px 1px 1px rgba(255, 255, 255, .25) inset;
 }
 .switch {
-	display: inline;
-	color: #d5d5d5;
+	
 	margin: 1em;
 }
 .switch input {
 	display: none;
 }
 .switch label {
-	padding: 7px 13px;
-	background: rgb(87, 87, 87);
-	margin: -2px;
-	font-size: 1.5em;
-	box-shadow: -1px -1px 2px rgba(0, 0, 0, .25) inset, 1px 1px 1px rgba(255, 255, 255, .25) inset;
+	padding: 16px;
+    margin: -2px;
+	color: #d5d5d5;
+	background: linear-gradient(0deg, rgb(180, 180, 180) 0%, rgb(228, 228, 228) 100%);
+	border: 1px solid;
+	border-top-color: #999999;
+	border-left-color: #999999;
+	border-right-color: #ffffff;
+	border-bottom-color: #ffffff;
+	color: black;
 }
 .switch input[type="radio"]:checked + label {
 	background: rgb(73,137,122);
-}
-#lblSwitch1 {
-	border-radius: 6px 0 0 6px;
-}
-#lblSwitch3 {
-	border-radius: 0 6px 6px 0;
 }
 .enabled {
 	box-shadow: -1px -1px 2px rgba(0, 0, 0, .25) inset, 1px 1px 3px rgba(255, 255, 255, .25) inset;
 }
 .disabled {
-	background: rgba(73,137,122,0.3);
-	box-shadow: 2px 2px 4px rgba(0,0,0, .4) inset;
+	background: rgba(137,147,159);
+	box-shadow: 2px 2px 6px rgba(0,0,0, .4) inset;
 }

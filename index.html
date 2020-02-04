@@ -16,10 +16,23 @@
 
   <div id="content">
     <div class="top-toolbar">
-      <button id="btnPrevPage" class="arrow a-left">&lt;</button>
+      
+    </div>
+    
+    <div class="canvasDiv">
+      <canvas id="canvas" width="600" height="800" tabindex="1"></canvas>
+    </div>
+    
+    <div class="toolbar">
+      <span id="i-tool">zoom 1</span>
+      <button id="line" class="enabled"><img src="img/icons/pencil.png" alt="pencil"></button>
+      <button id="brush" class="enabled"><img src="img/icons/brush.png" alt="brush"></button>
+      <button id="text" class="enabled"><img src="img/icons/text.png" alt="text"></button>
+      <button id="zoomin" class="enabled"><img src="img/icons/zoomin.png" alt="zoom in"></button>
+      <button id="zoomout" class="enabled"><img src="img/icons/zoomout.png" alt="zoom out"></button>
+      <button id="btnPrevPage" class="enabled"><img src="img/icons/arrow_left.png" alt="back"></button>
       <input id="inputPageNumber" type="number"></input>
-      <button id="btnNextPage" class="arrow a-right">&gt;</button>
-
+      <button id="btnNextPage" class="enabled"><img src="img/icons/arrow_right.png" alt="next page"></button>
       <div class="switch">
         <input id="original" value="1" name="version" type="radio" checked="" />
         <label id="lblSwitch1" for="original">O</label>
@@ -30,19 +43,6 @@
         <input id="solution" value="3" name="version" type="radio" />
         <label id="lblSwitch3" for="solution">Ř</label>
       </div>
-    </div>
-    
-    <div class="canvasDiv">
-      <canvas id="canvas" width="600" height="800" tabindex="1"></canvas>
-    </div>
-
-    <div class="toolbar">
-      <button id="line" class="enabled">line</button>
-      <button id="brush" class="enabled">brush</button>
-      <button id="text" class="enabled">text</button>
-      <button id="zoomin" class="enabled">+</button>
-      <button id="zoomout" class="enabled">-</button>
-      <span id="i-tool">zoom 1</span>
     </div>
   </div>
 
