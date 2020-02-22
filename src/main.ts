@@ -43,8 +43,8 @@ function setTool(t: number) {
 }
 function zoomCanvas(z: number) {
   zoom += z
-  let ispan = document.getElementById('i-tool')
-  if (ispan) ispan.innerHTML = 'zoom ' + zoom.toString()
+  let inputZoomInfo = <HTMLInputElement>document.getElementById('inputZoomInfo')
+  if (inputZoomInfo) inputZoomInfo.value = ((zoom-1)*100).toString() + '%'
 }
 
 window.onload = function () {
@@ -69,6 +69,9 @@ window.onload = function () {
   cv.addEventListener("mousemove", handleMouseMove)
   cv.addEventListener("keyup", handleKeyUp)
 
+  // set initial zoom text in input
+  let inputZoomInfo = <HTMLInputElement>document.getElementById('inputZoomInfo')
+  if (inputZoomInfo) inputZoomInfo.value = ((zoom-1)*100).toString() + '%'
 
   // first call, calls request animation frame inside so it cycles inside after this one call
   redrawCanvas()
