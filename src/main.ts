@@ -16,7 +16,8 @@ var brushPoints = new Array<Point>()
 var brushLastPoint = new Point(0, 0)
 var brushCurrentPoint = new Point(0, 0)
 
-var image = new Image()
+var image1 = new Image()
+var image2 = new Image()
 var imgDone = new Image()
 var imgUsr = new Image()
 var pageNumber = 1
@@ -44,13 +45,23 @@ function setTool(t: number) {
 function zoomCanvas(z: number) {
   zoom += z
   let inputZoomInfo = <HTMLInputElement>document.getElementById('inputZoomInfo')
-  if (inputZoomInfo) inputZoomInfo.value = ((zoom-1)*100).toString() + '%'
+  if (inputZoomInfo) inputZoomInfo.value = ((zoom - 1) * 100).toString() + '%'
+  document.getElementById('text-input').style.fontSize = TypedText.FONTSIZE * zoom + 'px'
 }
 
 window.onload = function () {
   setTool(0)
   setImgSrc()
+  window.addEventListener("resize", function (event) {
+    setImgSrc()
+  });
+
   const cv = <HTMLCanvasElement>document.getElementById('canvas')
+  cv.addEventListener("scroll", function (event) {
+    var scroll = this.scrollTop;
+    console.log(scroll)
+  });
+  const textArea = <HTMLTextAreaElement>document.getElementById('text-input')
   const ctx = cv.getContext("2d")
   const inputPageNumber = <HTMLInputElement>document.getElementById('inputPageNumber')
   const btnPrevPage = <HTMLButtonElement>document.getElementById('btnPrevPage')
@@ -68,10 +79,11 @@ window.onload = function () {
   cv.addEventListener("mouseup", handleMouseUp)
   cv.addEventListener("mousemove", handleMouseMove)
   cv.addEventListener("keyup", handleKeyUp)
+  textArea.addEventListener("mouseup", handleMouseUp)
 
   // set initial zoom text in input
   let inputZoomInfo = <HTMLInputElement>document.getElementById('inputZoomInfo')
-  if (inputZoomInfo) inputZoomInfo.value = ((zoom-1)*100).toString() + '%'
+  if (inputZoomInfo) inputZoomInfo.value = ((zoom - 1) * 100).toString() + '%'
 
   // first call, calls request animation frame inside so it cycles inside after this one call
   redrawCanvas()
@@ -116,7 +128,7 @@ window.onload = function () {
   })
 
   function prevPage() {
-    pageNumber = --pageNumber
+    pageNumber = pageNumber - 2
     if (pageNumber < 1) {
       pageNumber = 1
       btnPrevPage.disabled = true
@@ -128,7 +140,7 @@ window.onload = function () {
   if (prevbtn) prevbtn.onclick = prevPage
 
   function nextPage() {
-    pageNumber = ++pageNumber
+    pageNumber = pageNumber + 2
     if (pageNumber == 2) {
       btnPrevPage.disabled = false
     }
@@ -140,7 +152,8 @@ window.onload = function () {
 
   function handleKeyUp(e: KeyboardEvent) {
     if (newText.textTyping) {
-      newText.handleKeyUp(e)
+      if (e.keyCode == 27) finishText()
+      else newText.handleKeyUp(e)
     }
   }
   function handleMouseDown(e: MouseEvent) {
@@ -232,11 +245,14 @@ window.onload = function () {
 
   function redrawCanvas() {
     if (!ctx) return
-    cv.width = image.width * zoom
-    cv.height = image.height * zoom
+    cv.width = (image1.width * zoom) + (image2.width * zoom)
+    if (image1.height > image2.height) cv.height = image1.height * zoom
+    else cv.height = image2.height * zoom
+
     ctx.clearRect(0, 0, cv.width, cv.height)
 
-    ctx.drawImage(image, 0, 0, cv.width, cv.height)
+    ctx.drawImage(image1, 0, 0, image1.width * zoom, image1.height * zoom)
+    ctx.drawImage(image2, image1.width * zoom, 0, image2.width * zoom, image2.height * zoom)
 
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
@@ -300,9 +316,33 @@ window.onload = function () {
 
   function setImgSrc() {
     console.info('version ' + version)
-    if (version == 1) image.src = 'img/' + pageNumber.toString() + '.png'
-    if (version == 2) image.src = 'img/' + pageNumber.toString() + '.png'
-    if (version == 3) image.src = 'img/' + pageNumber.toString() + '_r.png'
+    image1.onload = function () {
+      console.info('image1.naturalHeight ' + image1.naturalHeight);
+      image1.width = vw / 2
+      let resizeRatio1 = image1.naturalWidth / ((vw + 20) / 2)
+      image1.height = image1.naturalHeight / resizeRatio1
+    }
+    image2.onload = function () {
+      console.info('image2.naturalHeight ' + image2.naturalHeight);
+      image2.width = vw / 2
+      let resizeRatio2 = image2.naturalWidth / ((vw + 20) / 2)
+      image2.height = image2.naturalHeight / resizeRatio2
+    }
+    if (version == 1) {
+      image1.src = 'img/' + pageNumber.toString() + '.png'
+      image2.src = 'img/' + (pageNumber + 1).toString() + '.png'
+    }
+    if (version == 2) {
+      image1.src = 'img/' + pageNumber.toString() + '.png'
+      image2.src = 'img/' + (pageNumber + 1).toString() + '.png'
+    }
+    if (version == 3) {
+      image1.src = 'img/' + pageNumber.toString() + '_r.png'
+      image2.src = 'img/' + (pageNumber + 1).toString() + '_r.png'
+    }
+    const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) - 20
+    console.info('window width ' + vw)
+
   }
 
 }

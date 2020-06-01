@@ -16,15 +16,17 @@
 
   <div id="content">
 
-    <div class="canvasDiv">
-      <canvas id="canvas" width="600" height="800" tabindex="1"></canvas>
+    <div id="canvasDiv">
+      <canvas id="canvas" width="600" height="800" tabindex="1">
+      </canvas>
+      <textarea id="text-input" type="text" class="hidden"></textarea>
     </div>
 
     <div class="toolbar">
       <button id="line" class="disabled top-left"><img src="img/icons/pencil.png" alt="pencil"></button>
       <button id="brush" class="enabled"><img src="img/icons/brush.png" alt="brush"></button>
       <button id="text" class="enabled"><img src="img/icons/text.png" alt="text"></button>
-      
+
       <button id="btnPrevPage" class="enabled"><img src="img/icons/arrow_left.png" alt="back"></button>
       <input id="inputPageNumber" type="number"></input>
       <button id="btnNextPage" class="enabled top-right"><img src="img/icons/arrow_right.png" alt="next page"></button>
