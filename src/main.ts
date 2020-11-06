@@ -1,4 +1,4 @@
-import { DrawnObject, Boundary, Line, BrushStroke, Point } from './classes/classes.js';
+import { DrawnObject, Boundary, Line, BrushStroke, Point, MainData } from './classes/classes.js';
 import { TypedText } from './classes/typed-text.js';
 
 var MAX_BRUSH_POINT_COUNT = 100
@@ -6,21 +6,23 @@ var FONTSIZE = 30
 var cvWidth = 600
 var cvHeight = 800
 var tool = 0 // 0 = none, 1 = line, 2 = text
-var version = 2 // 1 = original, 2 = my edit, 3 = solution
+var version = 1 // 1 = original, 2 = my edit, 3 = solution
 var zoom = 1
 var drawnObjects = new Array<DrawnObject>()
 var newLine = new Line(new Boundary(new Point(0, 0), new Point(0, 0)), false)
 var brushIsDrawing = false
-var newText = TypedText.getNewTypedText();
+var newText = TypedText.getNewTypedText()
 var brushPoints = new Array<Point>()
 var brushLastPoint = new Point(0, 0)
 var brushCurrentPoint = new Point(0, 0)
 
 var image1 = new Image()
 var image2 = new Image()
-var imgDone = new Image()
-var imgUsr = new Image()
 var pageNumber = 1
+var showErrorLeft = false
+var showErrorRight = false
+
+var mainData = new MainData(null, null, null)
 
 function setTool(t: number) {
   tool = t
@@ -50,6 +52,21 @@ function zoomCanvas(z: number) {
 }
 
 window.onload = function () {
+
+  var xhttp = new XMLHttpRequest();
+  //xhttp.open("GET", "http://iklett.cz/new/test2.php", true)
+  xhttp.open("GET", "http://localhost:5501/dist/data.json", true)
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      //console.info(xhttp.responseText)
+      mainData = JSON.parse(xhttp.responseText)
+      zoomCanvas(+mainData.settings.zoom)
+      // first call, calls request animation frame inside so it cycles inside after this one call
+      redrawCanvas()
+    }
+  }
+  xhttp.send()
+
   setTool(0)
   setImgSrc()
   window.addEventListener("resize", function (event) {
@@ -58,9 +75,9 @@ window.onload = function () {
 
   const cv = <HTMLCanvasElement>document.getElementById('canvas')
   cv.addEventListener("scroll", function (event) {
-    var scroll = this.scrollTop;
+    var scroll = this.scrollTop
     console.log(scroll)
-  });
+  })
   const textArea = <HTMLTextAreaElement>document.getElementById('text-input')
   const ctx = cv.getContext("2d")
   const inputPageNumber = <HTMLInputElement>document.getElementById('inputPageNumber')
@@ -84,9 +101,6 @@ window.onload = function () {
   // set initial zoom text in input
   let inputZoomInfo = <HTMLInputElement>document.getElementById('inputZoomInfo')
   if (inputZoomInfo) inputZoomInfo.value = ((zoom - 1) * 100).toString() + '%'
-
-  // first call, calls request animation frame inside so it cycles inside after this one call
-  redrawCanvas()
 
   inputPageNumber.addEventListener("change", function (event) {
     pageNumber = +inputPageNumber.value
@@ -186,7 +200,7 @@ window.onload = function () {
     var x = e.clientX - rect.left
     var y = e.clientY - rect.top
     switch (tool) {
-      case 0: return; // no tool
+      case 0: return // no tool
       case 1: // line
         // recalculate original point
         newLine.bo.a.x /= zoom
@@ -302,10 +316,9 @@ window.onload = function () {
   }
 
   function finishText() {
-    newText.finishText();
-
+    newText.finishText()
     drawnObjects.push(new DrawnObject(newText, pageNumber))
-    newText = TypedText.getNewTypedText();
+    newText = TypedText.getNewTypedText()
   }
 
   // 1 = original, 2 = my edit, 3 = solution
@@ -315,33 +328,49 @@ window.onload = function () {
   }
 
   function setImgSrc() {
-    console.info('version ' + version)
+
+    const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) - 20
+
+    if (mainData.pages && mainData.pages.length >= 2) {
+      console.info('maindata loaded')
+      if (version == 1) {
+        image1.src = mainData.pages.find(page => page.pageNumber == pageNumber).imgO
+        image2.src = mainData.pages.find(page => page.pageNumber == pageNumber + 1).imgO
+      }
+      if (version == 2) {
+        image1.src = mainData.pages.find(page => page.pageNumber == pageNumber).imgU
+        image2.src = mainData.pages.find(page => page.pageNumber == pageNumber + 1).imgU
+      }
+      if (version == 3) {
+        image1.src = mainData.pages.find(page => page.pageNumber == pageNumber).imgR
+        image2.src = mainData.pages.find(page => page.pageNumber == pageNumber + 1).imgR
+      }
+    } else {
+      console.info('main data not loaded')      
+    }
+
     image1.onload = function () {
-      console.info('image1.naturalHeight ' + image1.naturalHeight);
+      console.info('image1.naturalHeight ' + image1.naturalHeight)
       image1.width = vw / 2
       let resizeRatio1 = image1.naturalWidth / ((vw + 20) / 2)
       image1.height = image1.naturalHeight / resizeRatio1
     }
+    image1.onerror = function () {
+      console.info('image1 src failed to load')
+      image1.src = null
+      showErrorLeft = true
+    }
     image2.onload = function () {
-      console.info('image2.naturalHeight ' + image2.naturalHeight);
+      console.info('image2.naturalHeight ' + image2.naturalHeight)
       image2.width = vw / 2
       let resizeRatio2 = image2.naturalWidth / ((vw + 20) / 2)
       image2.height = image2.naturalHeight / resizeRatio2
     }
-    if (version == 1) {
-      image1.src = 'img/' + pageNumber.toString() + '.png'
-      image2.src = 'img/' + (pageNumber + 1).toString() + '.png'
+    image2.onerror = function () {
+      console.info('image2 src failed to load')
+      image2.src = null
+      showErrorRight = true
     }
-    if (version == 2) {
-      image1.src = 'img/' + pageNumber.toString() + '.png'
-      image2.src = 'img/' + (pageNumber + 1).toString() + '.png'
-    }
-    if (version == 3) {
-      image1.src = 'img/' + pageNumber.toString() + '_r.png'
-      image2.src = 'img/' + (pageNumber + 1).toString() + '_r.png'
-    }
-    const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) - 20
-    console.info('window width ' + vw)
 
   }
 

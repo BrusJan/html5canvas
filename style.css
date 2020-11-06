@@ -38,7 +38,10 @@ button {
 #canvas {
 	border: none;
 	background: transparent;
-	display: block;
+}
+
+#loading-text {
+	color: white;
 }
 
 #canvasDiv {
@@ -67,8 +70,8 @@ button {
 }
 
 .toolbar img {
-	width: 35px;
-	height: 35px;
+	width: 45px;
+	height: 45px;
 }
 
 .toolbar .top-left {

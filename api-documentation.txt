@@ -1,0 +1,49 @@
+GET [api-url]/getDocument?userId=345&bookId=213
+
+{
+	"settings": {
+		"zoom": "1"
+	},
+	"pages": [{
+			"pageNumber": "1",
+			"imgO": "http://adresa/original/o1.jpg",
+			"imgU": "http: //adresa/original/u1.jpg",
+			"imgR": "http: //adresa/original/r1.jpg"
+		},
+		{
+			"pageNumber": "2",
+			"imgO": "http://adresa/original/o2.jpg",
+			"imgU": "http: //adresa/original/u2.jpg",
+			"imgR": "http: //adresa/original/r2.jpg"
+		},
+		{
+			"pageNumber": "3",
+			"imgO": "http://adresa/original/o3.jpg",
+			"imgU": "http: //adresa/original/u3.jpg",
+			"imgR": "http: //adresa/original/r3.jpg"
+		}
+	],
+	"objects": {
+
+	}
+}
+
+POST [api-url]/savePage?userId=345&bookId=213
+
+body:
+{
+	"pages": {
+		{
+			"pageNumber": "1",
+			"image": "GUYWER768764GF9837GO8G3789*%^392OO(y7*(346o*W&^o8W&^O*WB&t6o87w6goW*N&MOG*L&WYGL*W&$Y..."
+		},
+		{
+			"pageNumber": "2",
+			"image": "GUYWER768764GF9837GO8G3789*%^392OO(y7*(346o*W&^o8W&^O*WB&t6o87w6goW*N&MOG*L&WYGL*W&$Y..."
+		},
+		{
+			"pageNumber": "3",
+			"image": "GUYWER768764GF9837GO8G3789*%^392OO(y7*(346o*W&^o8W&^O*WB&t6o87w6goW*N&MOG*L&WYGL*W&$Y..."
+		}
+	}	
+}

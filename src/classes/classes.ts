@@ -42,3 +42,15 @@ export class BrushStroke implements Drawable {
 export interface Drawable {
   draw(ctx: CanvasRenderingContext2D, zoom: number): void
 }
+export class MainData {
+  constructor(public settings: Settings, public pages: Page[], public objects: DrawnObject[]) {
+  }
+}
+export class Settings {
+  constructor(public zoom: number) {    
+  }
+}
+export class Page {
+  constructor(public pageNumber: number, public imgO: string, public imgU: string, public imgR: string) {    
+  }
+}
