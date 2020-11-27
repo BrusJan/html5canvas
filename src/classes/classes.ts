@@ -51,6 +51,32 @@ export class Settings {
   }
 }
 export class Page {
-  constructor(public pageNumber: number, public imgO: string, public imgU: string, public imgR: string) {    
+  constructor(public pageNumber: number, public imgO: string, public imgU: string, public imgR: string, public multimedia: any[]) {    
+  }
+}
+export class MediaAudio {
+  btnPlay = new Image()
+  DEFAULT_IMG_SIZE = 40
+  constructor(public id: number, public pageNumber: number, public url: string, public bo: Boundary) {
+    this.btnPlay.src = 'img/icons/play.png'
+  }
+  draw(ctx: CanvasRenderingContext2D, zoom: number): void {
+    ctx.drawImage(this.btnPlay, this.bo.a.x * zoom, this.bo.a.y * zoom, this.DEFAULT_IMG_SIZE * zoom, this.DEFAULT_IMG_SIZE * zoom) // 80 is width and height of the actual play.png icon
+  }
+  isInsideBoundary(x: number, y: number, zoom: number): boolean {
+    return x >= this.bo.a.x*zoom && x <= this.bo.a.x*zoom+this.DEFAULT_IMG_SIZE && y >= this.bo.a.y*zoom && y <= this.bo.a.y*zoom+this.DEFAULT_IMG_SIZE
+  }
+}
+export class MediaVideo {
+  btnPlay = new Image()
+  DEFAULT_IMG_SIZE = 40
+  constructor(public id: number, public pageNumber: number, public url: string, public bo: Boundary) {
+    this.btnPlay.src = 'img/icons/play.png'
+  }
+  draw(ctx: CanvasRenderingContext2D, zoom: number): void {
+    ctx.drawImage(this.btnPlay, this.bo.a.x * zoom, this.bo.a.y * zoom, this.DEFAULT_IMG_SIZE * zoom, this.DEFAULT_IMG_SIZE * zoom) // 80 is width and height of the actual play.png icon
+  }
+  isInsideBoundary(x: number, y: number, zoom: number): boolean {
+    return x >= this.bo.a.x*zoom && x <= this.bo.a.x*zoom+this.DEFAULT_IMG_SIZE && y >= this.bo.a.y*zoom && y <= this.bo.a.y*zoom+this.DEFAULT_IMG_SIZE
   }
 }

@@ -1,4 +1,4 @@
-import { DrawnObject, Boundary, Line, BrushStroke, Point, MainData } from './classes/classes.js';
+import { DrawnObject, Boundary, Line, BrushStroke, Point, MainData, MediaAudio, MediaVideo } from './classes/classes.js';
 import { TypedText } from './classes/typed-text.js';
 
 var MAX_BRUSH_POINT_COUNT = 100
@@ -19,8 +19,7 @@ var brushCurrentPoint = new Point(0, 0)
 var image1 = new Image()
 var image2 = new Image()
 var pageNumber = 1
-var showErrorLeft = false
-var showErrorRight = false
+var multimedia = new Array<any>()
 
 var mainData = new MainData(null, null, null)
 
@@ -28,39 +27,48 @@ function setTool(t: number) {
   tool = t
   switch (t) {
     case 1:
-      (<HTMLButtonElement>document.getElementById('line')).classList.replace('enabled', 'disabled');
-      (<HTMLButtonElement>document.getElementById('brush')).classList.replace('disabled', 'enabled');
-      (<HTMLButtonElement>document.getElementById('text')).classList.replace('disabled', 'enabled');
+      (<HTMLButtonElement>document.getElementById('line')).classList.replace('not-selected', 'selected');
+      (<HTMLButtonElement>document.getElementById('brush')).classList.replace('selected', 'not-selected');
+      (<HTMLButtonElement>document.getElementById('text')).classList.replace('selected', 'not-selected');
       break
     case 2:
-      (<HTMLButtonElement>document.getElementById('line')).classList.replace('disabled', 'enabled');
-      (<HTMLButtonElement>document.getElementById('brush')).classList.replace('enabled', 'disabled');
-      (<HTMLButtonElement>document.getElementById('text')).classList.replace('disabled', 'enabled');
+      (<HTMLButtonElement>document.getElementById('line')).classList.replace('selected', 'not-selected');
+      (<HTMLButtonElement>document.getElementById('brush')).classList.replace('not-selected', 'selected');
+      (<HTMLButtonElement>document.getElementById('text')).classList.replace('selected', 'not-selected');
       break
     case 3:
-      (<HTMLButtonElement>document.getElementById('line')).classList.replace('disabled', 'enabled');
-      (<HTMLButtonElement>document.getElementById('brush')).classList.replace('disabled', 'enabled');
-      (<HTMLButtonElement>document.getElementById('text')).classList.replace('enabled', 'disabled');
+      (<HTMLButtonElement>document.getElementById('line')).classList.replace('selected', 'not-selected');
+      (<HTMLButtonElement>document.getElementById('brush')).classList.replace('selected', 'not-selected');
+      (<HTMLButtonElement>document.getElementById('text')).classList.replace('not-selected', 'selected');
       break
   }
 }
 function zoomCanvas(z: number) {
   zoom += z
   let inputZoomInfo = <HTMLInputElement>document.getElementById('inputZoomInfo')
-  if (inputZoomInfo) inputZoomInfo.value = ((zoom - 1) * 100).toString() + '%'
+  if (inputZoomInfo) inputZoomInfo.value = ((zoom) * 100).toString() + '%'
   document.getElementById('text-input').style.fontSize = TypedText.FONTSIZE * zoom + 'px'
 }
 
 window.onload = function () {
 
   var xhttp = new XMLHttpRequest();
-  //xhttp.open("GET", "http://iklett.cz/new/test2.php", true)
+  //xhttp.open("GET", "http://iklett.cz/new/test3.php?id=110823", true)
+  
   xhttp.open("GET", "http://localhost:5501/dist/data.json", true)
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
-      //console.info(xhttp.responseText)
+      console.info(xhttp.responseText)
       mainData = JSON.parse(xhttp.responseText)
-      zoomCanvas(+mainData.settings.zoom)
+      zoom = +mainData.settings.zoom
+      setImgSrc()
+      // fill multimedia array
+      mainData.pages.forEach(page => {
+        if (page.multimedia)
+          page.multimedia.forEach(mm => {
+            if (mm.type == 0) multimedia.push(new MediaAudio(mm.id, page.pageNumber, mm.file, new Boundary(new Point(mm.x, mm.y), new Point(mm.x + mm.width, mm.y + mm.height))))
+          })
+      });
       // first call, calls request animation frame inside so it cycles inside after this one call
       redrawCanvas()
     }
@@ -83,6 +91,8 @@ window.onload = function () {
   const inputPageNumber = <HTMLInputElement>document.getElementById('inputPageNumber')
   const btnPrevPage = <HTMLButtonElement>document.getElementById('btnPrevPage')
   const btnNextPage = <HTMLButtonElement>document.getElementById('btnNextPage')
+  const btnFirstPage = <HTMLButtonElement>document.getElementById('btnFirstPage')
+  const btnLastPage = <HTMLButtonElement>document.getElementById('btnLastPage')
   const btnToolLine = <HTMLButtonElement>document.getElementById('line')
   const btnToolBrush = <HTMLButtonElement>document.getElementById('brush')
   const btnToolText = <HTMLButtonElement>document.getElementById('text')
@@ -91,6 +101,7 @@ window.onload = function () {
   const lblSwitch1 = <HTMLLabelElement>document.getElementById('lblSwitch1')
   const lblSwitch2 = <HTMLLabelElement>document.getElementById('lblSwitch2')
   const lblSwitch3 = <HTMLLabelElement>document.getElementById('lblSwitch3')
+  const audioMedia = <HTMLAudioElement>document.getElementById('audio-media')
   inputPageNumber.value = pageNumber.toString()
   cv.addEventListener("mousedown", handleMouseDown)
   cv.addEventListener("mouseup", handleMouseUp)
@@ -141,28 +152,52 @@ window.onload = function () {
     zoomCanvas(-0.25)
   })
 
-  function prevPage() {
-    pageNumber = pageNumber - 2
-    if (pageNumber < 1) {
-      pageNumber = 1
-      btnPrevPage.disabled = true
-    }
-    setImgSrc()
-    inputPageNumber.value = pageNumber.toString()
-  }
-  var prevbtn = document.getElementById('btnPrevPage')
-  if (prevbtn) prevbtn.onclick = prevPage
 
-  function nextPage() {
-    pageNumber = pageNumber + 2
-    if (pageNumber == 2) {
-      btnPrevPage.disabled = false
-    }
+  btnPrevPage.onclick = function () {
+    pageNumber = pageNumber - 2
+    if (pageNumber == 1 || pageNumber < 1) goToFirstPage()
+    btnNextPage.disabled = false
+    btnLastPage.disabled = true
     setImgSrc()
     inputPageNumber.value = pageNumber.toString()
   }
-  var nextbtn = document.getElementById('btnNextPage')
-  if (nextbtn) nextbtn.onclick = nextPage
+
+  btnNextPage.onclick = function () {
+    pageNumber = pageNumber + 2
+    if (pageNumber >= mainData.pages.length - 1) goToLastPage()
+    btnPrevPage.disabled = false
+    btnFirstPage.disabled = false
+    setImgSrc()
+    inputPageNumber.value = pageNumber.toString()
+  }
+
+  btnFirstPage.onclick = function () {
+    goToFirstPage()
+  }
+
+  function goToFirstPage() {
+    pageNumber = 1
+    btnPrevPage.disabled = true
+    btnFirstPage.disabled = true
+    btnLastPage.disabled = false
+    btnNextPage.disabled = false
+    setImgSrc()
+    inputPageNumber.value = pageNumber.toString()
+  }
+
+  btnLastPage.onclick = function () {
+    goToLastPage()
+  }
+
+  function goToLastPage() {
+    pageNumber = mainData.pages.length - 1
+    btnPrevPage.disabled = false
+    btnFirstPage.disabled = false
+    btnLastPage.disabled = true
+    btnNextPage.disabled = true
+    setImgSrc()
+    inputPageNumber.value = pageNumber.toString()
+  }
 
   function handleKeyUp(e: KeyboardEvent) {
     if (newText.textTyping) {
@@ -195,6 +230,20 @@ window.onload = function () {
 
   function handleMouseUp(e: MouseEvent) {
     // do stuff only when version 2 is active (moje upravy)
+    if (version == 1) {
+      const rect = cv.getBoundingClientRect()
+      var x = e.clientX - rect.left
+      var y = e.clientY - rect.top
+      multimedia.forEach(mm => {
+        if (mm.isInsideBoundary(x, y, zoom)) {
+          audioMedia.style.display = 'block'
+          audioMedia.style.left = mm.bo.a.x*zoom + 'px'
+          audioMedia.style.top = mm.bo.a.y*zoom + 'px'
+          audioMedia.src = mm.url
+        }
+      });
+    }
+
     if (version != 2) return
     const rect = cv.getBoundingClientRect()
     var x = e.clientX - rect.left
@@ -259,14 +308,15 @@ window.onload = function () {
 
   function redrawCanvas() {
     if (!ctx) return
-    cv.width = (image1.width * zoom) + (image2.width * zoom)
-    if (image1.height > image2.height) cv.height = image1.height * zoom
-    else cv.height = image2.height * zoom
+    //cv.width = (image1.width * zoom) + (image2.width * zoom)
+    cv.width = window.innerWidth * zoom
+    cv.height = image1.height > image2.height ? image1.height * zoom : image2.height * zoom
 
     ctx.clearRect(0, 0, cv.width, cv.height)
-
-    ctx.drawImage(image1, 0, 0, image1.width * zoom, image1.height * zoom)
-    ctx.drawImage(image2, image1.width * zoom, 0, image2.width * zoom, image2.height * zoom)
+    if (image1.complete)
+      ctx.drawImage(image1, 0, 0, cv.width / 2, (((cv.width / image1.width)) * image1.height) / 2)
+    if (image2.complete)
+      ctx.drawImage(image2, cv.width / 2, 0, cv.width / 2, (((cv.width / image2.width)) * image2.height) / 2)
 
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
@@ -299,8 +349,14 @@ window.onload = function () {
       }
       // draw current text
       newText.draw(ctx, zoom)
+
     }
 
+    // draw multimedia objects
+    multimedia.forEach(mm => {
+      if (mm.pageNumber != pageNumber) return;
+      mm.draw(ctx, zoom)
+    });
 
     requestAnimationFrame(redrawCanvas)
   }
@@ -324,6 +380,16 @@ window.onload = function () {
   // 1 = original, 2 = my edit, 3 = solution
   function switchVersion(v: number) {
     version = v
+    if (v == 2) {
+      btnToolBrush.classList.remove('unavailable'); btnToolBrush.disabled = null;
+      btnToolLine.classList.remove('unavailable'); btnToolLine.disabled = null;
+      btnToolText.classList.remove('unavailable'); btnToolText.disabled = null;
+    }
+    else {
+      btnToolBrush.classList.add('unavailable'); btnToolBrush.disabled = true
+      btnToolLine.classList.add('unavailable'); btnToolLine.disabled = true
+      btnToolText.classList.add('unavailable'); btnToolText.disabled = true
+    }
     setImgSrc()
   }
 
@@ -332,6 +398,7 @@ window.onload = function () {
     const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) - 20
 
     if (mainData.pages && mainData.pages.length >= 2) {
+      console.info('multimedia.length: ' + multimedia.length)
       console.info('maindata loaded')
       if (version == 1) {
         image1.src = mainData.pages.find(page => page.pageNumber == pageNumber).imgO
@@ -346,7 +413,7 @@ window.onload = function () {
         image2.src = mainData.pages.find(page => page.pageNumber == pageNumber + 1).imgR
       }
     } else {
-      console.info('main data not loaded')      
+      console.info('main data not loaded')
     }
 
     image1.onload = function () {
@@ -357,8 +424,7 @@ window.onload = function () {
     }
     image1.onerror = function () {
       console.info('image1 src failed to load')
-      image1.src = null
-      showErrorLeft = true
+      image1.src = 'img/icons/unavailable.png'
     }
     image2.onload = function () {
       console.info('image2.naturalHeight ' + image2.naturalHeight)
@@ -368,8 +434,7 @@ window.onload = function () {
     }
     image2.onerror = function () {
       console.info('image2 src failed to load')
-      image2.src = null
-      showErrorRight = true
+      image2.src = 'img/icons/unavailable.png'
     }
 
   }
