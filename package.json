@@ -22,6 +22,6 @@
   },
   "homepage": "https://github.com/BrusJan/html5canvas#readme",
   "dependencies": {
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.21"
   }
 }
