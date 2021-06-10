@@ -21,41 +21,55 @@
       <canvas id="canvas" width="600" height="800" tabindex="1">
       </canvas>
       <textarea id="text-input" type="text" class="hidden"></textarea>
-      <audio controls id="audio-media">
-        Your browser does not support the audio element.
-      </audio>
-      <video width="320" height="240" controls id="video-media">
-        Your browser does not support the video element.
-      </video> 
+      <div id="audio-media-div">
+        <button id="close-audio-media"><img src="img/icons/cross.png"></button>
+        <audio controls id="audio-media">
+          Your browser does not support the audio element.
+        </audio>
+      </div>
+      <div id="video-media-div">
+        <span><a href='' target="_blank" id="video-media-link">Otevřít v nové záložce</a></span>
+        <button id="close-video-media"><img src="img/icons/cross.png"></button>
+        <video width="600" height="400" controls id="video-media">
+          Your browser does not support the video element.
+        </video>
+      </div>
     </div>
 
-    <div class="toolbar">
-      <button id="line" class="top-left selected" disabled><img src="img/icons/pencil.png" alt="pencil"></button>
+    <div id="hide-toolbar"><img id="btn-hide-toolbar-img" src="img/icons/arr_down.png"></div>
+    <div id="toolbar">
+      <input type="color" class="top-left" id="color-picker" value="#000000">
+      <button id="line" class="selected" disabled><img src="img/icons/pencil.png" alt="pencil"></button>
       <button id="brush" class="not-selected" disabled><img src="img/icons/brush.png" alt="brush"></button>
+      <button id="square" class="not-selected" disabled><img src="img/icons/square.png" alt="square"></button>
+      <button id="ellipse" class="not-selected" disabled><img src="img/icons/ellipse.png" alt="square"></button>
       <button id="text" class="not-selected" disabled><img src="img/icons/text.png" alt="text"></button>
+      <button id="save" class="not-selected"><img src="img/icons/save.png" alt="Uložit"></button>
+      <button id="close" class="not-selected top-right"><img src="img/icons/cross.png" alt="Zavřít"></button>
 
       <button id="btnFirstPage" disabled><img src="img/icons/arrow_goto_first.png" alt="back"></button>
       <button id="btnPrevPage" class="not-selected" disabled><img src="img/icons/arrow_left.png" alt="back"></button>
       <input id="inputPageNumber" type="number"></input>
       <button id="btnNextPage" class="not-selected"><img src="img/icons/arrow_right.png" alt="next page"></button>
-      <button id="btnLastPage" class="top-right"><img src="img/icons/arrow_goto_last.png" alt="back"></button>
+      <button id="btnLastPage"><img src="img/icons/arrow_goto_last.png" alt="back"></button>
 
       <input id="original" value="1" name="version" type="radio" checked="checked" />
-      <label id="lblSwitch1" for="original" class="bottom-left">O</label>
+      <label id="lblSwitch1" for="original"><img src="img/icons/book.png"></label>
       <input id="edit" value="2" name="version" type="radio" />
-      <label id="lblSwitch2" for="edit">Ú</label>
+      <label id="lblSwitch2" for="edit"><img src="img/icons/edit.png"></label>
       <input id="solution" value="3" name="version" type="radio" />
-      <label id="lblSwitch3" for="solution">Ř</label>
+      <label id="lblSwitch3" for="solution"><img src="img/icons/solution.png"></label>
 
-      <button id="zoomin" class="not-selected"><img src="img/icons/zoomin.png" alt="zoom in"></button>
+      <button id="zoomout" class="not-selected"><img src="img/icons/zoomout.png" alt="zoom out"></button>
       <input id="inputZoomInfo" type="text" disabled></input>
-      <button id="zoomout" class="not-selected bottom-right"><img src="img/icons/zoomout.png" alt="zoom out"></button>
+      <button id="zoomin" class="not-selected"><img src="img/icons/zoomin.png" alt="zoom in"></button>
     </div>
   </div>
 
   <script type="module" src="dist/classes/classes.js"></script>
   <script type="module" src="dist/classes/typed-text.js"></script>
   <script type="module" src="dist/main.js"></script>
+  <script type="module" src="dist/toolbox.js"></script>
 </body>
 
 </html>

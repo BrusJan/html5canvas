@@ -10,6 +10,7 @@ export class TypedText implements Drawable {
         public drawingTextBoundary: boolean,
         public textTyping: boolean,
         public fontSize: number,
+        public color: any,
     ) {
         this.input = <HTMLInputElement>document.getElementById("text-input")
     }
@@ -69,6 +70,7 @@ export class TypedText implements Drawable {
     draw(ctx: CanvasRenderingContext2D, zoom: number): void {
         let fontsize = TypedText.FONTSIZE * zoom
         ctx.font = fontsize + "px Roboto"
+        ctx.fillStyle = this.color
 
         // draw text line by line
         let split = this.text.split('\n')
@@ -96,7 +98,7 @@ export class TypedText implements Drawable {
         this.input.value = ''
     }
 
-    static getNewTypedText(): TypedText {
+    static getNewTypedText(color: any): TypedText {
         return new TypedText(
             '',
             new Boundary(new Point(0, 0), new Point(0, 0)),
@@ -104,6 +106,7 @@ export class TypedText implements Drawable {
             false,
             false,
             TypedText.FONTSIZE,
+            color
         )
     }
 
