@@ -84,7 +84,7 @@ export interface Media {
 export class MediaAudio implements Media {
   btnPlay = new Image()
   DEFAULT_IMG_SIZE = 40
-  loaded = false;
+  loaded = false
   exactCoords = new Point(0,0) // pixel coordinations in canvas where the draw method computed it
   constructor(public id: number, public pageNumber: number, public url: string, public coords: Point) {
     this.btnPlay.src = 'img/icons/play.png'
@@ -99,8 +99,8 @@ export class MediaAudio implements Media {
     if (isRightSide) x = (this.coords.x * zoom * cvToOrigRatioX) + canvasWidth/2
     else x = this.coords.x * zoom * cvToOrigRatioX
     let y = this.coords.y * zoom * cvToOrigRatioY
-    this.exactCoords.x = x;
-    this.exactCoords.y = y;
+    this.exactCoords.x = x
+    this.exactCoords.y = y
     ctx.drawImage(this.btnPlay, x, y, this.DEFAULT_IMG_SIZE * zoom, this.DEFAULT_IMG_SIZE * zoom)
   }
   isInsideBoundary(x: number, y: number, zoom: number, isRightSide: boolean, canvasWidth: number): boolean {
@@ -110,7 +110,8 @@ export class MediaAudio implements Media {
 export class MediaVideo {
   btnPlay = new Image()
   DEFAULT_IMG_SIZE = 40
-  loaded = false;
+  loaded = false
+  consolePrinted = false
   exactCoords = new Point(0,0)
   constructor(public id: number, public pageNumber: number, public url: string, public coords: Point) {
     this.btnPlay.src = 'img/icons/pause.png'
@@ -120,8 +121,13 @@ export class MediaVideo {
     if (isRightSide) x = (this.coords.x * zoom * cvToOrigRatioX) + canvasWidth/2
     else x = this.coords.x * zoom * cvToOrigRatioX
     let y = this.coords.y * zoom * cvToOrigRatioY
-    this.exactCoords.x = x;
-    this.exactCoords.y = y;
+    this.exactCoords.x = x
+    this.exactCoords.y = y
+    if (!this.consolePrinted) {
+      console.info(`zoom: ${zoom}, canvasWidth: ${canvasWidth}, cvToOrigRatioX: ${cvToOrigRatioX}, cvToOrigRatioY: ${cvToOrigRatioY}`)
+      console.info(`printing to x:${x}, y:${y}`)
+      this.consolePrinted = true
+    }
     ctx.drawImage(this.btnPlay, x, y, this.DEFAULT_IMG_SIZE * zoom, this.DEFAULT_IMG_SIZE * zoom)
   }
   isInsideBoundary(x: number, y: number, zoom: number, isRightSide: boolean, canvasWidth: number): boolean {

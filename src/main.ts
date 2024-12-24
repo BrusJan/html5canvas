@@ -364,7 +364,7 @@ window.onload = () => {
   m.bookId = urlParams.get('id')
   m.userId = urlParams.get('user')
   if (!m.bookId || !m.userId) {
-    console.error('incorrect url, expecting parameters id and user')
+    console.error('incorrect url, expecting parameters id and user (?id=1&user=123)')
     return
   }
   var xhttp = new XMLHttpRequest();
@@ -455,13 +455,13 @@ window.onload = () => {
         let cvToOrigRatio1Y = 1
         if (m.image1.complete) {
           cvToOrigRatio1X = (m.cv.width/2) / m.image1.naturalWidth
-          cvToOrigRatio1Y = (m.cv.height/2) / m.image1.naturalHeight
+          cvToOrigRatio1Y = m.cv.height / m.image1.naturalHeight
         }
         let cvToOrigRatio2X = 1
         let cvToOrigRatio2Y = 1
         if (m.image2.complete) {
           cvToOrigRatio2X = (m.cv.width/2) / m.image2.naturalWidth
-          cvToOrigRatio2Y = (m.cv.height/2) / m.image2.naturalHeight
+          cvToOrigRatio2Y = m.cv.height / m.image2.naturalHeight
         }
         //console.info(`cv width: ${m.cv.width},cv height: ${m.cv.height}`)
         if (mm.pageNumber == m.pageNumber) mm.draw(m.ctx, m.zoom, false, null, cvToOrigRatio1X, cvToOrigRatio1Y)
@@ -481,6 +481,15 @@ window.onload = () => {
       m.videoMediaElement.src = m.videoMedia.url
       m.videoMediaLinkElement.href = m.videoMedia.url
     }
+
+    // set changes list
+    const changesDiv = document.getElementById('changesList');
+    changesDiv.innerHTML = '';
+    m.drawnObjects.forEach(o => {
+      const changeLine = document.createElement("p");
+      changeLine.innerText = JSON.stringify(o.obj);
+      changesDiv.appendChild(changeLine)
+    })
 
     requestAnimationFrame(redrawCanvas)
   }
